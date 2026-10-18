@@ -193,7 +193,7 @@ export const EducationHub: React.FC<EducationHubProps> = ({ settings }) => {
                 {/* Tombol Cadangan Utama di Layar Error */}
                 <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
                   <a
-                    href={googleDriveUrl}
+                    href="https://drive.google.com/file/d/1JDvuwvJct2LWt7hlw89f8tv5wck_sfJZ/view?usp=sharing"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 transition-all hover:scale-[1.02]"
@@ -270,7 +270,7 @@ export const EducationHub: React.FC<EducationHubProps> = ({ settings }) => {
 
               {/* Tautan Alternatif: "Tonton Video di Google Drive" */}
               <a
-                href={googleDriveUrl}
+                href="https://drive.google.com/file/d/1JDvuwvJct2LWt7hlw89f8tv5wck_sfJZ/view?usp=sharing"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-black text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/30 transition-all hover:scale-[1.02] shrink-0"
