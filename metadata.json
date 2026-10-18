@@ -1,0 +1,6 @@
+{
+  "name": "Kutim O2 - Platform Pemantau Kualitas Udara & Mitigasi Karhutla Kutai Timur",
+  "description": "Platform digital pemantau kualitas udara (ISPU), zonasi ancaman karhutla, peta TPS resmi bebas bakar sampah, dan sistem laporan warga untuk Kabupaten Kutai Timur.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
