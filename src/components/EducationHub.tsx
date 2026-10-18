@@ -169,8 +169,7 @@ export const EducationHub: React.FC<EducationHubProps> = ({ settings }) => {
               poster="/logo.png"
               className="w-full h-auto max-h-[640px] rounded-2xl focus:outline-none"
             >
-              <source src={videoSrc} type="video/mp4" />
-              <source src={videoSrc} type="video/webm" />
+              <source src="/video otan_compressed (1).mp4" type="video/mp4" />
               <p className="p-6 text-center text-xs text-white">
                 Browser Anda tidak mendukung pemutar video HTML5. Silakan tonton melalui Google Drive.
               </p>
