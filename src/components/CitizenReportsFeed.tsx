@@ -13,6 +13,7 @@ import {
   PlusCircle,
   ExternalLink,
   FileCheck2,
+  X,
 } from 'lucide-react';
 
 interface CitizenReportsFeedProps {
@@ -20,6 +21,7 @@ interface CitizenReportsFeedProps {
   settings: AccessibilitySettings;
   onOpenReportModal: () => void;
   onSelectReportOnMap: (report: CitizenReport) => void;
+  onClose?: () => void;
 }
 
 export const CitizenReportsFeed: React.FC<CitizenReportsFeedProps> = ({
@@ -27,6 +29,7 @@ export const CitizenReportsFeed: React.FC<CitizenReportsFeedProps> = ({
   settings,
   onOpenReportModal,
   onSelectReportOnMap,
+  onClose,
 }) => {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const t = translations[settings.language] || translations.id;
@@ -59,13 +62,27 @@ export const CitizenReportsFeed: React.FC<CitizenReportsFeedProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={onOpenReportModal}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-all"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>{t.quickReportBtn}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onOpenReportModal}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-all"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>{t.quickReportBtn}</span>
+          </button>
+
+          {onClose && (
+            <button
+              onClick={onClose}
+              title="Keluar ke Peta Zonasi"
+              aria-label="Tutup dan kembali ke Peta Zonasi"
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-bold text-xs bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-slate-700 transition-all shadow-xs"
+            >
+              <X className="w-4 h-4" />
+              <span>Keluar</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filter Chips */}

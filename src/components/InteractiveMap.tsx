@@ -51,7 +51,10 @@ import {
   Unlock,
   Globe,
   Map as MapIcon,
+  MessageCircle,
+  ShieldAlert,
 } from 'lucide-react';
+import { getRealtimeSyncMeta } from '../utils/realtimeUpdate';
 
 interface InteractiveMapProps {
   districts: DistrictData[];
@@ -386,7 +389,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       }
     }
 
-    // 2. Render Hotspots Pins (Lucide-based SVG HTML Markers)
+    // 2. Render Hotspots Pins (Unified NASA FIRMS VIIRS & MODIS Satellites)
     if (activeLayer === 'all' || activeLayer === 'hotspots') {
       hotspots.forEach((hs) => {
         const isSelected = selectedHotspot?.id === hs.id;
@@ -690,8 +693,63 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     );
   }, [selectedDistrict, tpsDepots]);
 
+  const syncMeta = getRealtimeSyncMeta();
+
   return (
     <div className="w-full space-y-4">
+      {/* Widget Status Live: Terhubung ke Live Satellite Feed NASA FIRMS dengan Pulsing Green Dot & Siklus Update 05:00 WITA */}
+      <div
+        className={`p-3.5 sm:p-4 rounded-2xl border transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-xs ${
+          isHighContrast
+            ? 'bg-black text-yellow-300 border-yellow-300'
+            : isDark
+            ? 'bg-slate-900 border-emerald-500/30 text-slate-100 shadow-md'
+            : 'bg-emerald-50/90 border-emerald-300 text-emerald-950 shadow-xs'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <span className="relative flex h-3.5 w-3.5 shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
+          </span>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-extrabold text-xs sm:text-sm text-emerald-900 dark:text-emerald-200">
+                Terhubung ke Live Satellite Feed NASA FIRMS
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200 font-bold uppercase tracking-wider">
+                Real-Time VIIRS &bull; MODIS
+              </span>
+            </div>
+            <p className="text-[11px] opacity-85 mt-0.5 leading-snug">
+              Seluruh data telemetry diperbarui otomatis setiap hari pukul <strong>05:00 WITA</strong> &bull; Sinkronisasi terakhir: <strong>{syncMeta.lastUpdatedFormatted}</strong>
+            </p>
+          </div>
+        </div>
+
+        {/* Quick Clickable Contact Buttons */}
+        <div className="flex items-center gap-2 shrink-0 self-start md:self-auto text-xs flex-wrap">
+          <a
+            href="https://wa.me/6282258451435?text=Halo%20Admin%20SI%20OTAN%20Kutim%2C%20saya%20ingin%20melaporkan%20titik%20api%20atau%20kendala"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-transform hover:scale-[1.02]"
+            title="Chat WhatsApp Admin Pengembang SI OTAN: 082258451435"
+          >
+            <MessageCircle className="w-3.5 h-3.5 fill-current" />
+            <span>WA Admin: 082258451435</span>
+          </a>
+          <a
+            href="tel:054921113"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs hover:border-emerald-500"
+            title="Telepon BPBD Kutim: (0549) 21113"
+          >
+            <PhoneCall className="w-3.5 h-3.5 text-amber-500" />
+            <span>BPBD: (0549) 21113</span>
+          </a>
+        </div>
+      </div>
+
       {/* 1. Explainer Bar: ISPU Index Meaning */}
       <div
         className={`p-3 rounded-2xl border transition-all ${
@@ -744,7 +802,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
               [
                 { id: 'all', label: t.layerAll || 'Semua', icon: Layers },
                 { id: 'zones', label: t.layerZones || 'Zonasi Risiko', icon: ShieldCheck },
-                { id: 'hotspots', label: t.layerHotspots || 'Titik Panas', icon: Flame },
+                { id: 'hotspots', label: 'Titik Panas (NASA FIRMS & VIIRS)', icon: Flame },
                 { id: 'damkar', label: 'Pos Pemadam (113)', icon: Shield },
                 { id: 'bank_sampah', label: 'Bank Sampah', icon: Coins },
                 { id: 'tps', label: t.layerTps || 'TPS & 3R', icon: Trash2 },
@@ -1365,11 +1423,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                   : t.quickReportBtn}
               </span>
             </button>
-            <div className="flex items-center justify-between text-[11px] opacity-80 px-1 font-semibold">
-              <span>Posko Siaga BPBD & Damkar Kutim:</span>
-              <a href="tel:113" className="font-black text-rose-500 hover:underline">
-                113 / (0549) 21113
-              </a>
+            <div className="pt-2 text-center text-[10px] text-slate-500 dark:text-slate-400">
+              Kontak Pengembang SI OTAN Kutim & Posko Siaga tersedia di widget pojok kanan bawah.
             </div>
           </div>
         </div>

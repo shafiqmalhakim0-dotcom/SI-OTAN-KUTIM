@@ -15,11 +15,15 @@ import {
   PhoneCall,
   Clock,
   Volume2,
+  ShieldAlert,
+  MessageCircle,
+  Phone,
+  Radio,
 } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab: 'map' | 'air' | 'tps' | 'reports' | 'education' | 'funfact';
-  setActiveTab: (tab: 'map' | 'air' | 'tps' | 'reports' | 'education' | 'funfact') => void;
+  activeTab: 'map' | 'air' | 'tps' | 'reports' | 'karhutla' | 'education' | 'funfact';
+  setActiveTab: (tab: 'map' | 'air' | 'tps' | 'reports' | 'karhutla' | 'education' | 'funfact') => void;
   onOpenReport: () => void;
   onOpenAccessibility: () => void;
   settings: AccessibilitySettings;
@@ -63,6 +67,8 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'air' as const, label: t.navAir, icon: Wind },
     { id: 'tps' as const, label: t.navTps, icon: Trash2 },
     { id: 'reports' as const, label: t.navReports, icon: Flame },
+    // Edukasi Karhutla strictly to the left of Edukasi Lingkungan
+    { id: 'karhutla' as const, label: t.navKarhutla || 'Edukasi Karhutla', icon: ShieldAlert },
     { id: 'education' as const, label: t.navEducation, icon: BookOpen },
     { id: 'funfact' as const, label: t.navFunFact, icon: Sparkles },
   ];
@@ -79,61 +85,51 @@ export const Header: React.FC<HeaderProps> = ({
             : 'bg-white/95 text-slate-800 border-slate-200'
         }`}
       >
-        {/* Top micro emergency banner */}
+        {/* Top micro status banner */}
         <div
-          className={`px-4 py-1 text-xs flex flex-wrap items-center justify-between border-b ${
+          className={`px-3 sm:px-6 py-1.5 text-xs flex items-center justify-between gap-2 border-b ${
             isHighContrast
               ? 'bg-yellow-400 text-black font-black border-yellow-500'
-              : 'bg-emerald-700 text-emerald-50 border-emerald-800/20'
+              : 'bg-emerald-800 text-emerald-50 border-emerald-900/30'
           }`}
         >
           <div className="flex items-center gap-2 font-medium">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-300 animate-ping" />
-            <span>Kabupaten Kutai Timur — Siaga Karhutla & Langit Bersih Bebas Asap</span>
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+            <span className="font-bold text-[11px] sm:text-xs">
+              Kab. Kutai Timur &bull; Siaga Karhutla &bull; Live NASA FIRMS (Update 05:00 WITA)
+            </span>
           </div>
-          <div className="flex items-center gap-4 text-[11px]">
-            <div className="flex items-center gap-1 opacity-90">
-              <Clock className="w-3 h-3" />
+
+          <div className="flex items-center gap-2 text-[11px] font-semibold">
+            <div className="flex items-center gap-1 opacity-90 text-[10px]">
+              <Clock className="w-3 h-3 text-emerald-300" />
               <span>{witaTime || 'WITA'}</span>
             </div>
-            <a
-              href="tel:113"
-              className="flex items-center gap-1 font-semibold hover:underline"
-              title="Telepon Damkar Kutai Timur"
-            >
-              <PhoneCall className="w-3 h-3" />
-              <span>Posko 113 / 112</span>
-            </a>
           </div>
         </div>
 
         {/* Main navigation container */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
-          {/* Brand identity */}
+          {/* Brand identity (clean without long expansion) */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setActiveTab('map')}
               className="flex items-center gap-3 text-left group focus-visible:outline-emerald-500"
             >
-              <div className="relative w-11 h-11 rounded-xl overflow-hidden ring-2 ring-emerald-500/40 group-hover:scale-105 transition-transform bg-white shadow-sm shrink-0 flex items-center justify-center p-0.5">
+              <div className="relative w-10 h-10 rounded-xl overflow-hidden ring-2 ring-emerald-500/40 group-hover:scale-105 transition-transform bg-white shadow-sm shrink-0 flex items-center justify-center p-0.5">
                 <img
                   src={logoImg}
                   alt="Logo SI OTAN KUTIM"
                   className="w-full h-full object-contain rounded-lg"
                 />
               </div>
-              <div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-black text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">
-                    {t.appName}
-                  </span>
-                  <span className="text-[10px] font-black px-1.5 py-0.5 rounded-sm bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                    LIVE
-                  </span>
-                </div>
-                <p className="text-[10px] sm:text-[11px] font-bold text-emerald-700 dark:text-emerald-400 leading-tight max-w-xs md:max-w-md lg:max-w-xl">
-                  {t.appTagline}
-                </p>
+              <div className="flex items-center gap-2">
+                <span className="font-black text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">
+                  {t.appName}
+                </span>
+                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-sm bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                  LIVE
+                </span>
               </div>
             </button>
           </div>

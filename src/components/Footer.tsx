@@ -1,12 +1,12 @@
 import React from 'react';
 import { AccessibilitySettings } from '../types';
 import { translations } from '../data/translations';
-import { Wind, Shield, PhoneCall, Heart, MapPin, ExternalLink, Leaf } from 'lucide-react';
+import { Wind, Shield, PhoneCall, Heart, MapPin, ExternalLink, Leaf, ShieldAlert, MessageCircle, Phone } from 'lucide-react';
 
 interface FooterProps {
   settings: AccessibilitySettings;
   onOpenAccessibility: () => void;
-  onSelectTab: (tab: 'map' | 'air' | 'tps' | 'reports' | 'education' | 'funfact') => void;
+  onSelectTab: (tab: 'map' | 'air' | 'tps' | 'reports' | 'karhutla' | 'education' | 'funfact') => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -87,6 +87,24 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li>
                 <button
+                  onClick={() => onSelectTab('reports')}
+                  className="hover:text-emerald-400 transition-colors"
+                >
+                  {t.navReports}
+                </button>
+              </li>
+              {/* Edukasi Karhutla strictly to the left of Edukasi Lingkungan */}
+              <li>
+                <button
+                  onClick={() => onSelectTab('karhutla')}
+                  className="hover:text-emerald-400 transition-colors text-amber-300 font-semibold flex items-center gap-1"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+                  <span>{t.navKarhutla || 'Edukasi Karhutla'}</span>
+                </button>
+              </li>
+              <li>
+                <button
                   onClick={() => onSelectTab('education')}
                   className="hover:text-emerald-400 transition-colors"
                 >
@@ -104,22 +122,51 @@ export const Footer: React.FC<FooterProps> = ({
             </ul>
           </div>
 
-          {/* Emergency Hotlines */}
+          {/* Emergency Hotlines & Developer Contact */}
           <div className="md:col-span-4 space-y-3 text-xs">
             <h4 className="font-bold text-white uppercase tracking-wider text-[11px] flex items-center gap-1.5">
               <PhoneCall className="w-3.5 h-3.5 text-rose-500" />
-              <span>Posko Siaga Darurat Karhutla</span>
+              <span>Posko Siaga & Kontak Pengembang</span>
             </h4>
             <div className="space-y-2 text-slate-400">
+              {/* Kontak Pengembang WhatsApp & Telp */}
+              <div className="p-2.5 rounded-xl bg-slate-800/90 border border-emerald-500/40">
+                <span className="font-bold text-emerald-300 block flex items-center gap-1">
+                  <MessageCircle className="w-3.5 h-3.5 text-emerald-400 fill-current" />
+                  <span>Pengembang SI OTAN Kutim:</span>
+                </span>
+                <div className="flex items-center gap-3 mt-1">
+                  <a
+                    href="https://wa.me/6282258451435?text=Halo%20Pengembang%20SI%20OTAN%20Kutim%2C%20saya%20ingin%20berkonsultasi%20atau%20melaporkan%20data"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-400 font-black hover:underline"
+                    title="Chat WhatsApp Pengembang SI OTAN Kutim"
+                  >
+                    WhatsApp: 0822-5845-1435
+                  </a>
+                  <a
+                    href="tel:082258451435"
+                    className="text-slate-300 font-bold hover:underline text-[11px]"
+                    title="Telepon Pengembang Langsung"
+                  >
+                    (Telepon)
+                  </a>
+                </div>
+              </div>
+
+              {/* Damkar Kutim */}
               <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60">
-                <span className="font-bold text-white block">Damkar Sangatta:</span>
+                <span className="font-bold text-white block">Damkar Sangatta / Posko 113:</span>
                 <a href="tel:113" className="text-rose-400 font-bold hover:underline">
                   113 / (0549) 21008
                 </a>
               </div>
+
+              {/* BPBD Kutim */}
               <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60">
-                <span className="font-bold text-white block">BPBD Kutai Timur:</span>
-                <a href="tel:054921113" className="text-emerald-400 font-bold hover:underline">
+                <span className="font-bold text-white block">Pusdalops BPBD Kutai Timur:</span>
+                <a href="tel:054921113" className="text-amber-400 font-bold hover:underline">
                   (0549) 21113 / 0811-580-1113
                 </a>
               </div>

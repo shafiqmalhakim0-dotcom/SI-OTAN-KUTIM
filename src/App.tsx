@@ -27,11 +27,14 @@ import { InteractiveMap } from './components/InteractiveMap';
 import { AirQualityPanel } from './components/AirQualityPanel';
 import { TpsDirectory } from './components/TpsDirectory';
 import { CitizenReportsFeed } from './components/CitizenReportsFeed';
+import { KarhutlaEducationHub } from './components/KarhutlaEducationHub';
 import { EducationHub } from './components/EducationHub';
 import { FunFactsSection } from './components/FunFactsSection';
 import { AccessibilityModal } from './components/AccessibilityModal';
 import { ReportModal } from './components/ReportModal';
+import { FloatingContactWidget } from './components/FloatingContactWidget';
 import { Footer } from './components/Footer';
+import { getDailySynchronizedHotspots } from './utils/realtimeUpdate';
 
 export default function App() {
   // Accessibility state
@@ -45,10 +48,12 @@ export default function App() {
 
   // App navigation & data state
   const [activeTab, setActiveTab] = useState<
-    'map' | 'air' | 'tps' | 'reports' | 'education' | 'funfact'
+    'map' | 'air' | 'tps' | 'reports' | 'karhutla' | 'education' | 'funfact'
   >('map');
   const [districts, setDistricts] = useState<DistrictData[]>(KUTIM_DISTRICTS);
-  const [hotspots, setHotspots] = useState<HotspotPin[]>(KUTIM_HOTSPOTS);
+  const [hotspots, setHotspots] = useState<HotspotPin[]>(() =>
+    getDailySynchronizedHotspots(KUTIM_HOTSPOTS)
+  );
   const [tpsDepots, setTpsDepots] = useState<WasteDepot[]>(KUTIM_TPS_DEPOTS);
   const [fireStations] = useState<FireStation[]>(KUTIM_FIRE_STATIONS);
   const [citizenReports, setCitizenReports] = useState<CitizenReport[]>(
@@ -203,6 +208,14 @@ export default function App() {
             settings={settings}
             onOpenReportModal={() => handleOpenReportModal()}
             onSelectReportOnMap={handleSelectReportOnMap}
+            onClose={() => setActiveTab('map')}
+          />
+        )}
+
+        {activeTab === 'karhutla' && (
+          <KarhutlaEducationHub
+            settings={settings}
+            onOpenReport={() => handleOpenReportModal()}
           />
         )}
 
@@ -221,6 +234,9 @@ export default function App() {
         onOpenAccessibility={() => setIsAccessibilityOpen(true)}
         onSelectTab={setActiveTab}
       />
+
+      {/* Floating Emergency & Developer Contact Widget (Bottom Right) */}
+      <FloatingContactWidget settings={settings} />
 
       {/* Accessibility Controls Modal */}
       <AccessibilityModal

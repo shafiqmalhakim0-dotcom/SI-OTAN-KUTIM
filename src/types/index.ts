@@ -76,7 +76,7 @@ export interface HotspotPin {
   svgX: number;
   svgY: number;
   confidence: number;
-  satellite: 'VIIRS' | 'MODIS' | 'SNPP' | 'Laporan Warga';
+  satellite: 'VIIRS' | 'MODIS' | 'SNPP' | 'Laporan Warga' | string;
   detectedAt: string;
   brightnessKelvin: number;
   type: 'karhutla' | 'pembakaran_sampah';
