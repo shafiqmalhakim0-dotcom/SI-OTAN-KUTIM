@@ -54,8 +54,8 @@ export const KarhutlaEducationHub: React.FC<KarhutlaEducationHubProps> = ({
 
   // Video State
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [videoSrc, setVideoSrc] = useState<string>(KARHUTLA_VIDEO_CONFIG.videoSrc);
-  const [googleDriveUrl, setGoogleDriveUrl] = useState<string>(KARHUTLA_VIDEO_CONFIG.googleDriveFullHdUrl);
+  const [videoSrc, setVideoSrc] = useState<string>(KARHUTLA_VIDEO_CONFIG."suara di balik asap (1) (1).mp4");
+  const [googleDriveUrl, setGoogleDriveUrl] = useState<string>(KARHUTLA_VIDEO_CONFIG."https://drive.google.com/file/d/1VkIGZ1lginMYcIKWwD6JbaGaL5giskcv/view?usp=drivesdk");
   const [videoError, setVideoError] = useState<string | null>(null);
   const [localVideoName, setLocalVideoName] = useState<string | null>(null);
 
