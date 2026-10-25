@@ -208,7 +208,7 @@ export const KarhutlaEducationHub: React.FC<KarhutlaEducationHubProps> = ({
               className="w-full h-auto max-h-[640px] rounded-2xl focus:outline-none"
             >
               <source src={videoSrc} type="video/mp4" />
-              <source src="/edukasi-karhutla-compressed.mp4" type="video/mp4" />
+              <source src="/suara dibalik asap (1) (1).mp4" type="video/mp4" />
               <p className="p-6 text-center text-xs text-white">
                 Browser Anda tidak mendukung pemutar video HTML5. Silakan tonton video melalui Google Drive di bawah ini.
               </p>
@@ -231,7 +231,7 @@ export const KarhutlaEducationHub: React.FC<KarhutlaEducationHubProps> = ({
 
                 <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
                   <a
-                    href={googleDriveUrl}
+                    href="https://drive.google.com/file/d/1VkIGZ1lginMYcIKWwD6JbaGaL5giskcv/view?usp=drivesdk"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-lg shadow-rose-600/30 transition-all hover:scale-[1.02]"
@@ -300,7 +300,7 @@ export const KarhutlaEducationHub: React.FC<KarhutlaEducationHubProps> = ({
               </div>
 
               <a
-                href={googleDriveUrl}
+                href="https://drive.google.com/file/d/1VkIGZ1lginMYcIKWwD6JbaGaL5giskcv/view?usp=drivesdk"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-black text-xs sm:text-sm bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-600/30 transition-all hover:scale-[1.02] shrink-0"
