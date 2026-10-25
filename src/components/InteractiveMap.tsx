@@ -53,8 +53,10 @@ import {
   Map as MapIcon,
   MessageCircle,
   ShieldAlert,
+  RefreshCw,
 } from 'lucide-react';
 import { getRealtimeSyncMeta } from '../utils/realtimeUpdate';
+import { fetchLiveFirmsHotspots, formatFirmsSyncHeader } from '../services/firmsService';
 
 interface InteractiveMapProps {
   districts: DistrictData[];
@@ -66,6 +68,9 @@ interface InteractiveMapProps {
   onSelectDistrict: (district: DistrictData | null) => void;
   onOpenReport: (prefillDistrict?: string) => void;
   settings: AccessibilitySettings;
+  syncStatus?: string;
+  onUpdateSyncStatus?: (status: string) => void;
+  onUpdateHotspots?: (newHotspots: HotspotPin[]) => void;
 }
 
 type LayerType = 'all' | 'zones' | 'hotspots' | 'damkar' | 'bank_sampah' | 'tps' | 'reports';
@@ -102,10 +107,14 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   onSelectDistrict,
   onOpenReport,
   settings,
+  syncStatus: externalSyncStatus,
+  onUpdateSyncStatus,
+  onUpdateHotspots,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const layersGroupRef = useRef<L.LayerGroup | null>(null);
+  const hotspotsLayerGroupRef = useRef<L.LayerGroup | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
 
   const [activeLayer, setActiveLayer] = useState<LayerType>('all');
@@ -118,6 +127,17 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [isSpeakingDistrict, setIsSpeakingDistrict] = useState(false);
   const [showNeighborBorders, setShowNeighborBorders] = useState(true);
   const [scrollZoomEnabled, setScrollZoomEnabled] = useState(false);
+
+  // NASA FIRMS Real-Time State
+  const [firmsHotspots, setFirmsHotspots] = useState<HotspotPin[]>(hotspots);
+  const [isFetchingFirms, setIsFetchingFirms] = useState<boolean>(false);
+  const [isLiveApiSource, setIsLiveApiSource] = useState<boolean>(false);
+  const [firmsMessage, setFirmsMessage] = useState<string>('');
+  const [internalSyncStatus, setInternalSyncStatus] = useState<string>(() => formatFirmsSyncHeader());
+  const [hasLoadedFirmsOnce, setHasLoadedFirmsOnce] = useState<boolean>(false);
+
+  const activeSyncStatus = externalSyncStatus || internalSyncStatus;
+  const isHotspotLayerActive = activeLayer === 'all' || activeLayer === 'hotspots';
 
   const t = translations[settings.language] || translations.id;
   const isHighContrast = settings.contrastMode === 'high-contrast';
@@ -193,10 +213,22 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
       const layerGroup = L.layerGroup().addTo(map);
       layersGroupRef.current = layerGroup;
+
+      const hotspotsGroup = L.layerGroup().addTo(map);
+      hotspotsLayerGroupRef.current = hotspotsGroup;
+
       mapInstanceRef.current = map;
     }
 
     return () => {
+      if (hotspotsLayerGroupRef.current) {
+        hotspotsLayerGroupRef.current.clearLayers();
+        hotspotsLayerGroupRef.current = null;
+      }
+      if (layersGroupRef.current) {
+        layersGroupRef.current.clearLayers();
+        layersGroupRef.current = null;
+      }
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -389,52 +421,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       }
     }
 
-    // 2. Render Hotspots Pins (Unified NASA FIRMS VIIRS & MODIS Satellites)
-    if (activeLayer === 'all' || activeLayer === 'hotspots') {
-      hotspots.forEach((hs) => {
-        const isSelected = selectedHotspot?.id === hs.id;
-        const iconHtml = `
-          <div style="
-            width: ${isSelected ? '32px' : '26px'};
-            height: ${isSelected ? '32px' : '26px'};
-            background-color: #ef4444;
-            border: 2px solid #ffffff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.6);
-            transform: translate(-50%, -50%);
-            transition: all 0.2s;
-            cursor: pointer;
-          ">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
-            </svg>
-          </div>
-        `;
-
-        const customIcon = L.divIcon({
-          html: iconHtml,
-          className: 'leaflet-hotspot-pin',
-          iconSize: [0, 0],
-        });
-
-        const marker = L.marker([hs.lat, hs.lng], { icon: customIcon });
-        marker.bindTooltip(`Titik Panas: ${hs.locationName} (${hs.satellite})`);
-
-        marker.on('click', () => {
-          setSelectedHotspot(hs);
-          setSelectedTps(null);
-          setSelectedFireStation(null);
-          setSelectedReport(null);
-          const parent = districts.find((d) => d.id === hs.districtId);
-          if (parent) onSelectDistrict(parent);
-        });
-
-        marker.addTo(group);
-      });
-    }
+    // 2. Hotspots are now exclusively managed by dedicated hotspotsLayerGroupRef with live NASA FIRMS API and memory cleanup
 
     // 2b. Render Fire Stations (Posko Pemadam Kebakaran Disdamkartan & BPBD)
     if (activeLayer === 'all' || activeLayer === 'damkar') {
@@ -627,7 +614,130 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         marker.addTo(group);
       });
     }
-  }, [districts, filteredDistricts, hotspots, tpsDepots, fireStations, citizenReports, activeLayer, selectedDistrict, selectedHotspot, selectedTps, selectedFireStation, selectedReport, isHighContrast, isDark, showNeighborBorders]);
+  }, [districts, filteredDistricts, tpsDepots, fireStations, citizenReports, activeLayer, selectedDistrict, selectedHotspot, selectedTps, selectedFireStation, selectedReport, isHighContrast, isDark, showNeighborBorders]);
+
+  // ==========================================
+  // INTEGRASI REAL-TIME NASA FIRMS & LEAFLET
+  // ==========================================
+
+  // Fungsi fetch asynchronous ke NASA FIRMS
+  const loadFirmsHotspots = async (force = false) => {
+    if (isFetchingFirms) return;
+
+    setIsFetchingFirms(true);
+    try {
+      console.log('[NASA FIRMS] Memulai pemanggilan asynchronous API NASA FIRMS Kutai Timur...');
+      const result = await fetchLiveFirmsHotspots();
+      setFirmsHotspots(result.hotspots);
+      setIsLiveApiSource(result.isLiveApi);
+      setFirmsMessage(result.message || '');
+      setInternalSyncStatus(result.syncTimestamp);
+      onUpdateSyncStatus?.(result.syncTimestamp);
+      onUpdateHotspots?.(result.hotspots);
+      setHasLoadedFirmsOnce(true);
+    } catch (err: any) {
+      console.warn('[NASA FIRMS] Error saat pemrosesan data titik panas:', err?.message || err);
+      setFirmsMessage('Sistem beralih ke mode data lapangan terverifikasi.');
+    } finally {
+      setIsFetchingFirms(false);
+    }
+  };
+
+  // 1. Fetch Data Real-Time: Titik panas HANYA di-fetch saat layer diaktifkan pengguna
+  useEffect(() => {
+    if (isHotspotLayerActive && !hasLoadedFirmsOnce) {
+      loadFirmsHotspots();
+    }
+  }, [isHotspotLayerActive, hasLoadedFirmsOnce]);
+
+  // 2. Kontrol Layer & Cleanup Memori:
+  // Titik panas HANYA ditampilkan saat layer diaktifkan.
+  // Saat layer dimatikan, WAJIB bersihkan (clearLayers) semua marker dari peta agar tidak memberatkan browser.
+  useEffect(() => {
+    if (!mapInstanceRef.current || !hotspotsLayerGroupRef.current) return;
+    const hotspotGroup = hotspotsLayerGroupRef.current;
+
+    // Bersihkan marker lama dari peta dan memori
+    hotspotGroup.clearLayers();
+
+    // Jika layer Titik Panas TIDAK diaktifkan pengguna, langsung keluar (memori browser bersih)
+    if (!isHotspotLayerActive) {
+      if (selectedHotspot) setSelectedHotspot(null);
+      return;
+    }
+
+    // Render marker titik panas yang presisi dari response NASA FIRMS
+    const listToRender = firmsHotspots.length > 0 ? firmsHotspots : hotspots;
+
+    listToRender.forEach((hs) => {
+      const isSelected = selectedHotspot?.id === hs.id;
+      const iconHtml = `
+        <div style="
+          width: ${isSelected ? '32px' : '26px'};
+          height: ${isSelected ? '32px' : '26px'};
+          background-color: #ef4444;
+          border: 2px solid #ffffff;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 10px rgba(239, 68, 68, 0.6);
+          transform: translate(-50%, -50%);
+          transition: all 0.2s;
+          cursor: pointer;
+        ">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+          </svg>
+        </div>
+      `;
+
+      const customIcon = L.divIcon({
+        html: iconHtml,
+        className: 'leaflet-hotspot-pin',
+        iconSize: [0, 0],
+      });
+
+      const marker = L.marker([hs.lat, hs.lng], { icon: customIcon });
+      marker.bindTooltip(`Titik Panas: ${hs.locationName} (${hs.satellite})`);
+
+      marker.on('click', () => {
+        setSelectedHotspot(hs);
+        setSelectedTps(null);
+        setSelectedFireStation(null);
+        setSelectedReport(null);
+        const parent = districts.find((d) => d.id === hs.districtId);
+        if (parent) onSelectDistrict(parent);
+      });
+
+      marker.addTo(hotspotGroup);
+    });
+  }, [isHotspotLayerActive, firmsHotspots, hotspots, selectedHotspot, districts]);
+
+  // 3. Otomatisasi Jadwal Update Jam 05:00 WITA:
+  // Logika pengecekan waktu lokal (WITA) untuk otomatisasi refetch setiap hari pukul 05:00 WITA
+  useEffect(() => {
+    let lastRefetchedWitaDate = '';
+
+    const checkDaily0500Wita = () => {
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      const wita = new Date(utc + 3600000 * 8);
+
+      const hour = wita.getHours();
+      const dateKey = `${wita.getFullYear()}-${wita.getMonth()}-${wita.getDate()}`;
+
+      // Trigger refetch otomatis saat waktu lokal WITA memasuki jam 5 pagi
+      if (hour === 5 && lastRefetchedWitaDate !== dateKey) {
+        lastRefetchedWitaDate = dateKey;
+        console.log('[NASA FIRMS] Memulai sinkronisasi otomatis harian pukul 05:00 WITA...');
+        loadFirmsHotspots(true);
+      }
+    };
+
+    const intervalId = setInterval(checkDaily0500Wita, 30000); // Cek tiap 30 detik
+    return () => clearInterval(intervalId);
+  }, []);
 
   // Handle scrollWheelZoom toggle safely
   useEffect(() => {
@@ -718,35 +828,37 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 Terhubung ke Live Satellite Feed NASA FIRMS
               </span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200 font-bold uppercase tracking-wider">
-                Real-Time VIIRS &bull; MODIS
+                {isLiveApiSource ? 'LIVE API NASA FIRMS' : 'VIIRS • MODIS'}
               </span>
+              {isFetchingFirms && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 font-bold animate-pulse">
+                  Mengunduh Satelit...
+                </span>
+              )}
             </div>
             <p className="text-[11px] opacity-85 mt-0.5 leading-snug">
-              Seluruh data telemetry diperbarui otomatis setiap hari pukul <strong>05:00 WITA</strong> &bull; Sinkronisasi terakhir: <strong>{syncMeta.lastUpdatedFormatted}</strong>
+              <strong>{activeSyncStatus}</strong> &bull; Pembaruan otomatis harian pukul <strong>05:00 WITA</strong>
             </p>
+            {firmsMessage && (
+              <div className="mt-1 text-[10px] py-0.5 px-2 rounded-md bg-emerald-100 dark:bg-slate-800 text-emerald-900 dark:text-emerald-300 font-medium inline-flex items-center gap-1">
+                <Info className="w-3 h-3 shrink-0" />
+                <span>{firmsMessage}</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Quick Clickable Contact Buttons */}
+        {/* Kontrol Manual Refetch NASA FIRMS */}
         <div className="flex items-center gap-2 shrink-0 self-start md:self-auto text-xs flex-wrap">
-          <a
-            href="https://wa.me/6282258451435?text=Halo%20Admin%20SI%20OTAN%20Kutim%2C%20saya%20ingin%20melaporkan%20titik%20api%20atau%20kendala"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-transform hover:scale-[1.02]"
-            title="Chat WhatsApp Admin Pengembang SI OTAN: 082258451435"
+          <button
+            onClick={() => loadFirmsHotspots(true)}
+            disabled={isFetchingFirms}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-transform hover:scale-[1.02] disabled:opacity-60"
+            title="Refetch data NASA FIRMS secara langsung"
           >
-            <MessageCircle className="w-3.5 h-3.5 fill-current" />
-            <span>WA Admin: 082258451435</span>
-          </a>
-          <a
-            href="tel:054921113"
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs hover:border-emerald-500"
-            title="Telepon BPBD Kutim: (0549) 21113"
-          >
-            <PhoneCall className="w-3.5 h-3.5 text-amber-500" />
-            <span>BPBD: (0549) 21113</span>
-          </a>
+            <RefreshCw className={`w-3.5 h-3.5 ${isFetchingFirms ? 'animate-spin' : ''}`} />
+            <span>{isFetchingFirms ? 'Mengunduh...' : 'Sinkronkan Sekarang'}</span>
+          </button>
         </div>
       </div>
 

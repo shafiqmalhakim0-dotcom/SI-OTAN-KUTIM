@@ -35,6 +35,7 @@ import { ReportModal } from './components/ReportModal';
 import { FloatingContactWidget } from './components/FloatingContactWidget';
 import { Footer } from './components/Footer';
 import { getDailySynchronizedHotspots } from './utils/realtimeUpdate';
+import { formatFirmsSyncHeader } from './services/firmsService';
 
 export default function App() {
   // Accessibility state
@@ -45,6 +46,9 @@ export default function App() {
     language: 'id',
     soundEnabled: true,
   });
+
+  // Dynamic NASA FIRMS Sync Header State
+  const [syncStatus, setSyncStatus] = useState<string>(() => formatFirmsSyncHeader());
 
   // App navigation & data state
   const [activeTab, setActiveTab] = useState<
@@ -163,6 +167,7 @@ export default function App() {
         onOpenAccessibility={() => setIsAccessibilityOpen(true)}
         settings={settings}
         onUpdateLanguage={(l: Language) => setSettings({ ...settings, language: l })}
+        syncStatus={syncStatus}
       />
 
       {/* 2. Air Quality Early Warning Banner & Audio Speaker */}
@@ -184,6 +189,9 @@ export default function App() {
             onSelectDistrict={setSelectedDistrict}
             onOpenReport={handleOpenReportModal}
             settings={settings}
+            syncStatus={syncStatus}
+            onUpdateSyncStatus={setSyncStatus}
+            onUpdateHotspots={(newHs) => setHotspots(newHs)}
           />
         )}
 

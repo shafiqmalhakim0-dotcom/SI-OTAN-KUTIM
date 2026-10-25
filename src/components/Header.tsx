@@ -28,6 +28,7 @@ interface HeaderProps {
   onOpenAccessibility: () => void;
   settings: AccessibilitySettings;
   onUpdateLanguage: (lang: Language) => void;
+  syncStatus?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -37,6 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAccessibility,
   settings,
   onUpdateLanguage,
+  syncStatus,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [witaTime, setWitaTime] = useState('');
@@ -96,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-2 font-medium">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
             <span className="font-bold text-[11px] sm:text-xs">
-              Kab. Kutai Timur &bull; Siaga Karhutla &bull; Live NASA FIRMS (Update 05:00 WITA)
+              Kab. Kutai Timur &bull; Siaga Karhutla &bull; {syncStatus || 'SINKRONISASI TERAKHIR: 05:00 WITA'}
             </span>
           </div>
 
