@@ -54,7 +54,7 @@ export const KarhutlaEducationHub: React.FC<KarhutlaEducationHubProps> = ({
 
   // Video State
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [videoSrc, setVideoSrc] = useState<string>("suara di balik asap (1) (1).mp4");
+  const [videoSrc, setVideoSrc] = useState<string>("Jejak di balik asap (1) (1).mp4");
   const [googleDriveUrl, setGoogleDriveUrl] = useState<string>("https://drive.google.com/file/d/1VkIGZ1lginMYcIKWwD6JbaGaL5giskcv/view?usp=drivesdk");
   const [videoError, setVideoError] = useState<string | null>(null);
   const [localVideoName, setLocalVideoName] = useState<string | null>(null);
@@ -208,7 +208,7 @@ export const KarhutlaEducationHub: React.FC<KarhutlaEducationHubProps> = ({
               className="w-full h-auto max-h-[640px] rounded-2xl focus:outline-none"
             >
               <source src={videoSrc} type="video/mp4" />
-              <source src="/suara dibalik asap (1) (1).mp4" type="video/mp4" />
+              <source src="/Jejak dibalik asap (1) (1).mp4" type="video/mp4" />
               <p className="p-6 text-center text-xs text-white">
                 Browser Anda tidak mendukung pemutar video HTML5. Silakan tonton video melalui Google Drive di bawah ini.
               </p>
