@@ -46,8 +46,8 @@ export const EducationHub: React.FC<EducationHubProps> = ({ settings }) => {
   const [isVideoLoading, setIsVideoLoading] = useState<boolean>(true);
   const [localFileName, setLocalFileName] = useState<string | null>(null);
   const [showConfigHelper, setShowConfigHelper] = useState<boolean>(false);
-  const [inputVideoSrc, setInputVideoSrc] = useState<string>(USER_VIDEO_CONFIG.videoSrc);
-  const [inputDriveUrl, setInputDriveUrl] = useState<string>(USER_VIDEO_CONFIG.googleDriveUrl);
+  const [inputVideoSrc, setInputVideoSrc] = useState<string>("jejak di balik asap (1) (1).mp4");
+  const [inputDriveUrl, setInputDriveUrl] = useState<string>("https://drive.google.com/file/d/1VkIGZ1lginMYcIKWwD6JbaGaL5giskcv/view?usp=drivesdk");
 
   const t = translations[settings.language] || translations.id;
   const isHighContrast = settings.contrastMode === 'high-contrast';
