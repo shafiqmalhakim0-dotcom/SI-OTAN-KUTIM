@@ -41,7 +41,7 @@ export default async function handler(req, res) {
       error: "koneksi ke NASA gagal",
       jenis: error?.name == "TimeoutError"
       ? "TIMEOUT"
-        : NETWORK_ERROR"
+        : "NETWORK_ERROR"
     });
   }
 }
