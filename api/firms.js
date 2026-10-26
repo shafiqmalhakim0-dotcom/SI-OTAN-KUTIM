@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  const key = process.env.FIRMS_MAP_KEY;
+  const key = (process.env.FIRMS_MAP_KEY || "").trim();
 
   if (!key) {
     return res.status(500).json({
@@ -17,9 +17,15 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
+      const pesanNASA = await response.text();
+      
       return res.status(502).json({
         error: "NASA menolak permintaan",
-        nasaStatus: response.status
+        nasaStatus: response.status,
+        alasanNASA: pesanNASA
+        .split(key)
+        .join("[API_KEY_DISEMBUNYIKAN]")
+        .slice(0, 300)
       });
     }
 
