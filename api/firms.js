@@ -17,7 +17,10 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
-      throw new Error("NASA FIRMS tidak merespons");
+      return res.status(502).json({
+        error: "NASA menolak permintaan",
+        nasaStatus: response.status
+      });
     }
 
     const csv = await response.text();
@@ -35,7 +38,10 @@ export default async function handler(req, res) {
     return res.status(200).send(csv);
   } catch (error) {
     return res.status(502).json({
-      error: "Gagal mengambil data NASA FIRMS"
+      error: "koneksi ke NASA gagal",
+      jenis: error?.name == "TimeoutError"
+      ? "TIMEOUT"
+        : NETWORK_ERROR"
     });
   }
 }
