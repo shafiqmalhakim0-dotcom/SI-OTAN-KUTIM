@@ -92,6 +92,82 @@ export default function App() {
     }
   }, [settings]);
 
+
+  // Live air quality follows the visitor's location when permission is granted.
+  const [airQuality, setAirQuality] = useState(CURRENT_AIR_QUALITY);
+  const [airLocationLabel, setAirLocationLabel] = useState('Sangatta (lokasi default)');
+  const [airDataSource, setAirDataSource] = useState('Data contoh lokal');
+  useEffect(() => {
+    let active = true;
+    let refreshTimer: ReturnType<typeof setInterval> | undefined;
+    let currentCoords = { latitude: 0.5042, longitude: 117.5451 };
+
+    const loadAirQuality = async () => {
+      try {
+        const params = new URLSearchParams({
+          latitude: String(currentCoords.latitude),
+          longitude: String(currentCoords.longitude),
+          current: 'us_aqi,pm2_5,pm10,carbon_monoxide,nitrogen_dioxide,ozone,sulphur_dioxide',
+          timezone: 'auto',
+        });
+        const response = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?${params.toString()}`, { cache: 'no-store' });
+        if (!response.ok) throw new Error('Layanan kualitas udara tidak tersedia');
+        const payload = await response.json();
+        const current = payload.current;
+        if (!current || !Number.isFinite(current.us_aqi)) throw new Error('Data AQI tidak tersedia');
+
+        const aqi = Math.round(current.us_aqi);
+        const category = aqi <= 50 ? 'baik' : aqi <= 100 ? 'sedang' : aqi <= 150 ? 'tidak_sehat' : aqi <= 200 ? 'tidak_sehat' : aqi <= 300 ? 'sangat_tidak_sehat' : 'berbahaya';
+        const categoryText = aqi <= 50 ? 'Baik' : aqi <= 100 ? 'Sedang' : aqi <= 150 ? 'Tidak sehat bagi kelompok sensitif' : aqi <= 200 ? 'Tidak sehat' : aqi <= 300 ? 'Sangat tidak sehat' : 'Berbahaya';
+        const next = {
+          overallIspu: aqi,
+          category,
+          dominantPollutant: 'US AQI (model Open-Meteo)',
+          pm25: Number(current.pm2_5 ?? 0),
+          pm10: Number(current.pm10 ?? 0),
+          co: Number(current.carbon_monoxide ?? 0) / 1000,
+          no2: Number(current.nitrogen_dioxide ?? 0),
+          o3: Number(current.ozone ?? 0),
+          so2: Number(current.sulphur_dioxide ?? 0),
+          lastUpdated: `${new Date().toLocaleString('id-ID')} · ${categoryText}`,
+          warningNotice: {
+            id: `US AQI ${aqi} — ${categoryText}. Data model atmosfer Open-Meteo, bukan pembacaan sensor lokal.`,
+            en: `US AQI ${aqi} — ${categoryText}. Open-Meteo atmospheric model data, not a local sensor reading.`,
+            kt: `US AQI ${aqi} — ${categoryText}. Data model atmosfer Open-Meteo, lain data sensor langsung.`,
+          },
+        };
+        if (active) {
+          setAirQuality(next);
+          setAirDataSource('Open-Meteo Air Quality API (model CAMS)');
+        }
+      } catch (error) {
+        if (active) setAirDataSource('Data kualitas udara belum berhasil diperbarui; menampilkan data terakhir yang tersedia.');
+      }
+    };
+
+    const start = (latitude: number, longitude: number, label: string) => {
+      currentCoords = { latitude, longitude };
+      if (active) setAirLocationLabel(label);
+      void loadAirQuality();
+      refreshTimer = setInterval(() => void loadAirQuality(), 15 * 60 * 1000);
+    };
+
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => start(position.coords.latitude, position.coords.longitude, 'Lokasi Anda'),
+        () => start(0.5042, 117.5451, 'Sangatta (lokasi default)'),
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 5 * 60 * 1000 }
+      );
+    } else {
+      start(0.5042, 117.5451, 'Sangatta (lokasi default)');
+    }
+
+    return () => {
+      active = false;
+      if (refreshTimer) clearInterval(refreshTimer);
+    };
+  }, []);
+
   // Handle adding new crowdsourced citizen report
   const handleAddReport = (newReport: CitizenReport) => {
     setCitizenReports((prev) => [newReport, ...prev]);
@@ -172,8 +248,10 @@ export default function App() {
 
       {/* 2. Air Quality Early Warning Banner & Audio Speaker */}
       <AirQualityBanner
-        airQuality={CURRENT_AIR_QUALITY}
+        airQuality={airQuality}
         settings={settings}
+        locationLabel={airLocationLabel}
+        dataSource={airDataSource}
       />
 
       {/* 3. Main View Area */}

@@ -7,11 +7,15 @@ import { Volume2, VolumeX, AlertTriangle, ShieldCheck, Flame, Info, CheckCircle2
 interface AirQualityBannerProps {
   airQuality: AirQualitySummary;
   settings: AccessibilitySettings;
+  locationLabel?: string;
+  dataSource?: string;
 }
 
 export const AirQualityBanner: React.FC<AirQualityBannerProps> = ({
   airQuality,
   settings,
+  locationLabel = 'Lokasi pengguna',
+  dataSource = 'Open-Meteo Air Quality API',
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const t = translations[settings.language] || translations.id;
@@ -78,7 +82,7 @@ export const AirQualityBanner: React.FC<AirQualityBannerProps> = ({
                   {airQuality.dominantPollutant}
                 </span>
                 <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium hidden lg:inline">
-                  • {airQuality.lastUpdated}
+                  • {locationLabel} · {airQuality.lastUpdated}
                 </span>
               </div>
 

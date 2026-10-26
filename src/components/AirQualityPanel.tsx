@@ -26,11 +26,15 @@ import {
 interface AirQualityPanelProps {
   airQuality: AirQualitySummary;
   settings: AccessibilitySettings;
+  locationLabel?: string;
+  dataSource?: string;
 }
 
 export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
   airQuality,
   settings,
+  locationLabel = 'Lokasi pengguna',
+  dataSource = 'Open-Meteo Air Quality API',
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const t = translations[settings.language] || translations.id;
@@ -41,7 +45,7 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
       stopSpeech();
       setIsPlaying(false);
     } else {
-      const summaryText = `${t.airQualityTitle}. Nilai ISPU saat ini adalah ${airQuality.overallIspu}, berstatus ${t.airUnhealthy}. Parameter dominan adalah ${airQuality.dominantPollutant}. PM2.5 tercatat ${airQuality.pm25} mikrogram per meter kubik, dan PM10 sebesar ${airQuality.pm10}. Disarankan memakai masker jika keluar rumah dan jangan membakar sampah!`;
+      const summaryText = `${t.airQualityTitle}. Nilai US AQI perkiraan saat ini adalah ${airQuality.overallIspu}, berstatus ${t.airUnhealthy}. Parameter dominan adalah ${airQuality.dominantPollutant}. PM2.5 tercatat ${airQuality.pm25} mikrogram per meter kubik, dan PM10 sebesar ${airQuality.pm10}. Disarankan memakai masker jika keluar rumah dan jangan membakar sampah!`;
 
       playSpeech(
         summaryText,
@@ -164,7 +168,7 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-black uppercase tracking-wider text-rose-500 bg-rose-500/10 px-2.5 py-1 rounded-lg border border-rose-500/20">
-                Pusat Kendali Sangatta
+                {locationLabel}
               </span>
               <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{airQuality.lastUpdated}</span>
             </div>
@@ -175,7 +179,7 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
               </span>
               <div>
                 <span className="text-xl font-black block text-slate-900 dark:text-white">{t.airUnhealthy}</span>
-                <span className="text-xs font-bold text-rose-600 dark:text-rose-400">Rentang Indeks: 101 - 200 (Tidak Sehat)</span>
+                <span className="text-xs font-bold text-rose-600 dark:text-rose-400">Indeks yang ditampilkan adalah US AQI dari model atmosfer</span>
               </div>
             </div>
 
@@ -202,7 +206,7 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
           </div>
 
           <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 text-xs leading-relaxed text-slate-700 dark:text-slate-200 font-medium">
-            <strong className="text-slate-900 dark:text-white">Parameter Dominan:</strong> {airQuality.dominantPollutant}. Partikel asap hasil karhutla dan pembakaran sampah rumah tangga mendominasi langit Kutai Timur saat ini.
+            <strong className="text-slate-900 dark:text-white">Sumber:</strong> {dataSource}. <strong className="text-slate-900 dark:text-white">Parameter Dominan:</strong> {airQuality.dominantPollutant}. Partikel asap hasil karhutla dan pembakaran sampah rumah tangga mendominasi langit Kutai Timur saat ini.
           </div>
         </div>
 
