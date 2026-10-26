@@ -250,6 +250,8 @@ export default function App() {
       <AirQualityBanner
         airQuality={airQuality}
         settings={settings}
+        locationLabel={airLocationLabel}
+        dataSource={airDataSource}
       />
 
       {/* 3. Main View Area */}
