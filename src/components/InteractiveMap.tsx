@@ -129,7 +129,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [scrollZoomEnabled, setScrollZoomEnabled] = useState(false);
 
   // NASA FIRMS Real-Time State
-  const [firmsHotspots, setFirmsHotspots] = useState<HotspotPin[]>(hotspots);
+  const [firmsHotspots, setFirmsHotspots] = useState<HotspotPin[]>([]);
   const [isFetchingFirms, setIsFetchingFirms] = useState<boolean>(false);
   const [isLiveApiSource, setIsLiveApiSource] = useState<boolean>(false);
   const [firmsMessage, setFirmsMessage] = useState<string>('');
@@ -667,7 +667,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
 
     // Render marker titik panas yang presisi dari response NASA FIRMS
-    const listToRender = firmsHotspots.length > 0 ? firmsHotspots : hotspots;
+    const listToRender = firmsHotspots;
 
     listToRender.forEach((hs) => {
       const isSelected = selectedHotspot?.id === hs.id;
