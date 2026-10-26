@@ -6,7 +6,7 @@ export default async function handler(req, res) {
       error: "FIRMS_MAP_KEY belum diatur"
     });
   }
-
+  
   const url =
     `https://firms.modaps.eosdis.nasa.gov` +
     `/api/area/csv/${key}/VIIRS_SNPP_NRT/115.8,-0.1,119.0,1.9/1`;
