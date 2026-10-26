@@ -156,89 +156,61 @@ export function parseFirmsCsv(csvText: string): HotspotPin[] {
  * Menggunakan import.meta.env.VITE_FIRMS_API_KEY
  */
 export async function fetchLiveFirmsHotspots(): Promise<FirmsFetchResult> {
-  const syncHeader = formatFirmsSyncHeader();
-  const apiKey = (import.meta.env.VITE_FIRMS_API_KEY || '').trim();
+  const waktu = new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'Asia/Makassar',
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date());
 
-  // 1. Jika API Key belum dikonfigurasi, gunakan fallback aman data lapangan tersinkronisasi
-  if (!apiKey) {
-    console.info(
-      '[NASA FIRMS Service] Kunci API belum diisi di VITE_FIRMS_API_KEY. Menggunakan fallback data satelit VIIRS/MODIS terverifikasi Kutai Timur yang disinkronkan otomatis jam 05:00 WITA.'
-    );
-    const fallbackData = getDailySynchronizedHotspots(KUTIM_HOTSPOTS);
-    return {
-      hotspots: fallbackData,
-      isLiveApi: false,
-      syncTimestamp: syncHeader,
-      sourceLabel: 'NASA FIRMS VIIRS/MODIS (Data Tersinkronisasi Otomatis 05:00 WITA)',
-      count: fallbackData.length,
-      message: 'Mode Sinkronisasi Aman: Menampilkan data titik panas satelit terverifikasi Kutai Timur.',
-    };
-  }
+  const syncTimestamp = `Diperiksa: ${waktu} WITA`;
 
-  // 2. Coba ambil dari NASA FIRMS API (VIIRS S-NPP NRT untuk area Kutai Timur)
   try {
-    // NASA FIRMS Area CSV endpoint: /api/area/csv/[MAP_KEY]/[SOURCE]/[AREA-COORDINATES]/[DAY_RANGE]
-    const source = 'VIIRS_SNPP_NRT';
-    const dayRange = 1; // 1 hari terakhir
-    const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${encodeURIComponent(apiKey)}/${source}/${KUTIM_FIRMS_BBOX}/${dayRange}`;
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 detik timeout
-
-    const response = await fetch(url, {
-      method: 'GET',
-      signal: controller.signal,
+    // Mengambil data melalui backend Vercel
+    // API key NASA tetap tersimpan aman di server.
+    const response = await fetch('/api/firms', {
+      cache: 'no-store',
     });
 
-    clearTimeout(timeoutId);
-
     if (!response.ok) {
-      throw new Error(`NASA FIRMS API merespon HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(`API NASA gagal: HTTP ${response.status}`);
     }
 
     const csvText = await response.text();
 
-    // Validasi apakah respon berisi pesan error dari FIRMS (misal invalid map_key)
-    if (csvText.toLowerCase().includes('invalid key') || csvText.toLowerCase().includes('error')) {
-      throw new Error(`Respon NASA FIRMS: ${csvText.trim().slice(0, 100)}`);
+    const header = csvText
+      .split(/\r?\n/)[0]
+      .toLowerCase();
+
+    if (
+      !header.includes('latitude') ||
+      !header.includes('longitude')
+    ) {
+      throw new Error('Format data NASA FIRMS tidak valid');
     }
 
     const parsedHotspots = parseFirmsCsv(csvText);
 
-    if (parsedHotspots.length === 0) {
-      // Tidak ada titik api terdeteksi dalam 24 jam terakhir di Kutai Timur (Kondisi Aman)
-      console.info('[NASA FIRMS Service] API Live berhasil dihubungi. Tidak ada anomali titik panas aktif baru di Kutai Timur (Status Aman).');
-      // Berikan sampel baseline terverifikasi agar visualisasi peta tetap informatif
-      const verifiedBaseline = getDailySynchronizedHotspots(KUTIM_HOTSPOTS);
-      return {
-        hotspots: verifiedBaseline,
-        isLiveApi: true,
-        syncTimestamp: syncHeader,
-        sourceLabel: 'NASA FIRMS Live API (NRT VIIRS 375m Kutai Timur)',
-        count: verifiedBaseline.length,
-        message: 'Terhubung ke NASA FIRMS API: Data titik panas diperbarui secara langsung.',
-      };
-    }
-
-    console.info(`[NASA FIRMS Service] Sukses mengunduh ${parsedHotspots.length} titik panas live dari satelit NASA FIRMS.`);
     return {
       hotspots: parsedHotspots,
       isLiveApi: true,
-      syncTimestamp: syncHeader,
-      sourceLabel: 'NASA FIRMS Live API (NRT VIIRS 375m)',
+      syncTimestamp,
+      sourceLabel: 'NASA FIRMS VIIRS S-NPP NRT',
       count: parsedHotspots.length,
+      message: parsedHotspots.length > 0
+        ? `${parsedHotspots.length} titik panas terdeteksi satelit.`
+        : 'NASA terhubung. Tidak ada hotspot terdeteksi pada periode yang diminta.',
     };
-  } catch (error: any) {
-    // Error handling & fallback aman agar aplikasi tidak pernah crash
-    console.warn('[NASA FIRMS Service] Gagal menghubungi NASA FIRMS API secara langsung:', error?.message || error);
-    const fallbackData = getDailySynchronizedHotspots(KUTIM_HOTSPOTS);
+
+  } catch (error) {
+    console.error('NASA FIRMS:', error);
+
     return {
-      hotspots: fallbackData,
+      hotspots: [],
       isLiveApi: false,
-      syncTimestamp: syncHeader,
-      sourceLabel: 'NASA FIRMS VIIRS/MODIS (Mode Fallback Aman)',
-      count: fallbackData.length,
-      message: `Peringatan API: ${error?.message || 'Koneksi terbatas'}. Sistem tetap berjalan menggunakan data lapangan terverifikasi.`,
+      syncTimestamp,
+      sourceLabel: 'NASA FIRMS tidak tersedia',
+      count: 0,
+      message: 'Data satelit tidak dapat diambil. Periksa koneksi API.',
     };
   }
 }
