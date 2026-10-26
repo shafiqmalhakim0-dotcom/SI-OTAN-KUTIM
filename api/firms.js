@@ -1,5 +1,8 @@
 export default async function handler(req, res) {
-  const key = (process.env.FIRMS_MAP_KEY || "").trim();
+  const key = (process.env.FIRMS_MAP_KEY || "")
+    .trim()
+    .replace(/^["']|["']$/g, "")
+    .trim();
 
   if (!key) {
     return res.status(500).json({
