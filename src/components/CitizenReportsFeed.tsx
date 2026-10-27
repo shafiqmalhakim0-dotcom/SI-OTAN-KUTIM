@@ -178,7 +178,7 @@ export const CitizenReportsFeed: React.FC<CitizenReportsFeedProps> = ({
               {/* Card Footer */}
               <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-xs">
                 <span className="opacity-70 text-[11px]">
-                  Pelapor: <strong>{report.reporterName}</strong> ({report.reporterRole})
+                  <strong>Pelapor: Warga setempat</strong> · Identitas dirahasiakan demi privasi
                 </span>
 
                 <button
