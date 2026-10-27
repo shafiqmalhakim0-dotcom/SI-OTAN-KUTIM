@@ -116,6 +116,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const layersGroupRef = useRef<L.LayerGroup | null>(null);
   const hotspotsLayerGroupRef = useRef<L.LayerGroup | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const userLocationLayerRef = useRef<L.LayerGroup | null>(null);
 
   const [activeLayer, setActiveLayer] = useState<LayerType>('all');
   const [mapType, setMapType] = useState<'osm' | 'topo' | 'satellite'>('osm');
@@ -127,6 +128,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [isSpeakingDistrict, setIsSpeakingDistrict] = useState(false);
   const [showNeighborBorders, setShowNeighborBorders] = useState(true);
   const [scrollZoomEnabled, setScrollZoomEnabled] = useState(false);
+  const [isLocatingUser, setIsLocatingUser] = useState(false);
+  const [userLocationMessage, setUserLocationMessage] = useState('');
 
   // NASA FIRMS Real-Time State
   const [firmsHotspots, setFirmsHotspots] = useState<HotspotPin[]>([]);
@@ -758,6 +761,68 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     });
   }, [selectedDistrict]);
 
+  const handleLocateMe = () => {
+    if (!navigator.geolocation) {
+      setUserLocationMessage('Browser ini tidak mendukung akses lokasi.');
+      return;
+    }
+    if (!mapInstanceRef.current) {
+      setUserLocationMessage('Peta belum siap. Coba lagi sebentar.');
+      return;
+    }
+
+    setIsLocatingUser(true);
+    setUserLocationMessage('Meminta izin dan mencari lokasi perangkat…');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        const map = mapInstanceRef.current;
+        if (!map) {
+          setIsLocatingUser(false);
+          return;
+        }
+
+        if (!userLocationLayerRef.current) {
+          userLocationLayerRef.current = L.layerGroup().addTo(map);
+        }
+        const group = userLocationLayerRef.current;
+        group.clearLayers();
+
+        const userIcon = L.divIcon({
+          className: 'siotan-user-location-icon',
+          html: '<div style="width:18px;height:18px;border:3px solid white;border-radius:50%;background:#2563eb;box-shadow:0 0 0 7px rgba(37,99,235,.22),0 2px 8px rgba(0,0,0,.35)"></div>',
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+        });
+        L.circle([latitude, longitude], {
+          radius: Math.max(accuracy, 20),
+          color: '#2563eb',
+          weight: 1,
+          fillColor: '#3b82f6',
+          fillOpacity: 0.12,
+        }).addTo(group);
+        L.marker([latitude, longitude], { icon: userIcon, title: 'Lokasi Anda' })
+          .bindPopup('<strong>Lokasi Anda</strong><br/>Perkiraan akurasi: ' + Math.round(accuracy) + ' meter')
+          .addTo(group)
+          .openPopup();
+
+        map.setView([latitude, longitude], Math.max(map.getZoom(), 14), { animate: true });
+        setUserLocationMessage('Lokasi ditemukan. Titik biru menunjukkan posisi perangkat Anda; akurasi ±' + Math.round(accuracy) + ' m.');
+        setIsLocatingUser(false);
+      },
+      (error) => {
+        const message = error.code === error.PERMISSION_DENIED
+          ? 'Izin lokasi ditolak. Aktifkan izin lokasi untuk situs ini melalui pengaturan browser.'
+          : error.code === error.POSITION_UNAVAILABLE
+          ? 'Lokasi belum dapat ditemukan. Pastikan GPS/lokasi perangkat aktif.'
+          : 'Pencarian lokasi melewati batas waktu. Coba lagi.';
+        setUserLocationMessage(message);
+        setIsLocatingUser(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+    );
+  };
+
   const handleZoom = (delta: number) => {
     if (!mapInstanceRef.current) return;
     const current = mapInstanceRef.current.getZoom();
@@ -995,6 +1060,25 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             <Globe className="w-3.5 h-3.5" />
             <span>{showNeighborBorders ? 'Batas Luar: Tampil' : 'Batas Luar: Sembunyi'}</span>
           </button>
+        </div>
+
+        {/* Find and show the visitor's own location after permission */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleLocateMe}
+            disabled={isLocatingUser}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-xs font-bold shadow-sm transition-colors"
+            title="Minta izin lokasi dan tampilkan posisi Anda pada peta"
+          >
+            <MapPin className="w-4 h-4" />
+            <span>{isLocatingUser ? 'Mencari lokasi…' : 'Lokasi Saya'}</span>
+          </button>
+          {userLocationMessage && (
+            <span role="status" aria-live="polite" className="text-xs text-slate-600 dark:text-slate-300">
+              {userLocationMessage}
+            </span>
+          )}
         </div>
 
         {/* Search District & Zoom Tools */}
