@@ -338,6 +338,22 @@ export const KarhutlaEducationHub: React.FC<KarhutlaEducationHubProps> = ({
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Pejabat Resmi Kutim</span>
             </div>
+
+            <div className="mt-3 w-36 sm:w-44 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-slate-800 p-3 text-left">
+              <div className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-2">Dengarkan sambutan</div>
+              <audio
+                controls
+                preload="none"
+                className="w-full h-9"
+                aria-label="Audio sambutan Kepala BPBD Kutai Timur"
+              >
+                <source src="/sambutan-kepala-bpbd.mp3" type="audio/mpeg" />
+                Browser Anda tidak mendukung pemutar audio.
+              </audio>
+              <p className="mt-1.5 text-[10px] leading-snug text-slate-600 dark:text-slate-300">
+                Audio asli sambutan Kepala BPBD
+              </p>
+            </div>
           </div>
 
           {/* Keterangan & Kotak Kutipan Sambutan Resmi */}
@@ -370,7 +386,7 @@ export const KarhutlaEducationHub: React.FC<KarhutlaEducationHubProps> = ({
             <div className="relative p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-rose-500/10 via-amber-500/5 to-transparent border border-rose-500/25 text-left space-y-2.5">
               <Quote className="w-8 h-8 text-rose-500/40 absolute top-4 right-4 -scale-x-100" />
               <div className="text-xs font-black uppercase tracking-wider text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
-                <span>Sambutan Resmi & Arahan Mitigasi:</span>
+                <span>Ulasan & Dukungan Resmi untuk SI-OTAN:</span>
               </div>
               <p className="text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-slate-200 font-medium italic">
                 "{BPBD_LEADER_PROFILE.officialStatement}"
