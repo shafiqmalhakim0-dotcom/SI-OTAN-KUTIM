@@ -44,13 +44,25 @@ export const AirQualityBanner: React.FC<AirQualityBannerProps> = ({
   };
 
   const isHighContrast = settings.contrastMode === 'high-contrast';
+  const aqi = Math.max(0, Number(airQuality.overallIspu) || 0);
+  const category = aqi <= 50
+    ? { label: 'BAIK', badge: 'bg-emerald-600 text-white', icon: 'text-emerald-600', panel: 'bg-emerald-50/70 border-emerald-200' }
+    : aqi <= 100
+    ? { label: 'SEDANG', badge: 'bg-amber-400 text-slate-950', icon: 'text-amber-600', panel: 'bg-amber-50/70 border-amber-200' }
+    : aqi <= 150
+    ? { label: 'TIDAK SEHAT BAGI KELOMPOK SENSITIF', badge: 'bg-orange-500 text-white', icon: 'text-orange-600', panel: 'bg-orange-50/70 border-orange-200' }
+    : aqi <= 200
+    ? { label: 'TIDAK SEHAT', badge: 'bg-red-600 text-white', icon: 'text-red-600', panel: 'bg-red-50/70 border-red-200' }
+    : aqi <= 300
+    ? { label: 'SANGAT TIDAK SEHAT', badge: 'bg-purple-700 text-white', icon: 'text-purple-600', panel: 'bg-purple-50/70 border-purple-200' }
+    : { label: 'BERBAHAYA', badge: 'bg-red-950 text-white', icon: 'text-red-950', panel: 'bg-red-100/70 border-red-300' };
 
   // Category color mapping
   const getBadgeStyle = () => {
     if (isHighContrast) {
       return 'bg-black text-yellow-300 border-2 border-yellow-300';
     }
-    return 'bg-rose-600 text-white shadow-sm shadow-rose-600/30';
+    return category.badge;
   };
 
   return (
@@ -62,7 +74,7 @@ export const AirQualityBanner: React.FC<AirQualityBannerProps> = ({
           ? 'bg-black text-yellow-300 border-yellow-400'
           : settings.contrastMode === 'dark'
           ? 'bg-slate-900 border-slate-700 text-slate-100 shadow-sm'
-          : 'bg-gradient-to-r from-amber-50 via-rose-50/60 to-orange-50 border-amber-200/80 text-slate-900'
+          : '${category.panel} text-slate-900'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5">
@@ -76,7 +88,7 @@ export const AirQualityBanner: React.FC<AirQualityBannerProps> = ({
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
                 <span className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wide shadow-xs ${getBadgeStyle()}`}>
-                  ISPU {airQuality.overallIspu} · {t.airUnhealthy}
+                  US AQI {airQuality.overallIspu} · {category.label}
                 </span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-200/80 dark:bg-slate-800 px-2.5 py-0.5 rounded-md border border-slate-300 dark:border-slate-700">
                   {airQuality.dominantPollutant}
@@ -87,7 +99,7 @@ export const AirQualityBanner: React.FC<AirQualityBannerProps> = ({
               </div>
 
               <p className="text-xs sm:text-sm font-semibold leading-relaxed max-w-4xl text-slate-800 dark:text-slate-200">
-                {airQuality.warningNotice[settings.language] || airQuality.warningNotice.id}
+                US AQI {airQuality.overallIspu} — {category.label}. Data model atmosfer Open-Meteo, bukan pembacaan sensor lokal.
               </p>
             </div>
           </div>
