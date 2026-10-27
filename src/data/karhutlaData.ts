@@ -56,7 +56,7 @@ export const BPBD_LEADER_PROFILE: BpbdLeaderProfile = {
   location: 'Kawasan Pusat Perkantoran Bukit Pelangi, Sangatta Utara',
   avatarUrl: '/kepala_bpbd_kutim.jpg',
   officialStatement:
-    'Kebakaran hutan dan lahan bukan semata urusan regu pemadam dan aparat, melainkan tanggung jawab moral kita bersama menjaga ibu pertiwi Kutai Timur. Karakteristik lahan gambut kita yang dalam menuntut kesiapsiagaan preventif—karena memadamkan api di bawah tanah jauh lebih sulit daripada mencegahnya dari awal. Mari bersama-sama kita katakan TIDAK pada pembakaran lahan sembarangan, aktif melapor melalui Posko Siaga BPBD (0549) 21113 dan SI OTAN Kutim, demi mewujudkan Kutai Timur tangguh bencana dan berudara sehat.',
+    'Assalamu’alaikum warahmatullahi wabarakatuh. Saya Kepala BPBD Kabupaten Kutai Timur, Dr. Hj. Sulastin. Dengan ini, saya mendukung program dari siswa-siswi SMA Negeri 2 Sangatta Utara dalam proses pengembangan aplikasi deteksi kebakaran hutan dan lahan, yaitu aplikasi SI-OTAN. Semoga dengan adanya aplikasi ini dapat memberikan manfaat dan informasi mengenai data terkait kebencanaan, baik kebakaran hutan dan lahan maupun bencana lainnya. Sekian dari saya. Buat adik-adik, tetap semangat. Salam tangguh, salam kemanusiaan.',
   callout: 'Kutai Timur Tangguh, Sigap Bencana, Langit Biru Bebas Asap',
   officialBadges: [
     'Komando Operasi Satgas Karhutla Kutim',
