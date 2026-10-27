@@ -23,15 +23,33 @@ import {
   Flame,
 } from 'lucide-react';
 
+export interface WeatherSummary {
+  temperature: number;
+  humidity: number;
+  windSpeed: number;
+  windDirection: number;
+  cloudCover: number;
+  precipitation: number;
+  pressure: number;
+  lastUpdated: string;
+}
+
 interface AirQualityPanelProps {
   airQuality: AirQualitySummary;
+  weather?: WeatherSummary | null;
   settings: AccessibilitySettings;
   locationLabel?: string;
   dataSource?: string;
 }
 
+const windDirectionLabel = (degrees: number) => {
+  const directions = ['U', 'U-TL', 'TL', 'T-TL', 'T', 'T-TG', 'TG', 'S-TG', 'S', 'S-BD', 'BD', 'B-BD', 'B', 'B-BL', 'BL', 'U-BL'];
+  return directions[Math.round(((degrees % 360) + 360) % 360 / 22.5) % 16];
+};
+
 export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
   airQuality,
+  weather,
   settings,
   locationLabel = 'Lokasi pengguna',
   dataSource = 'Open-Meteo Air Quality API',
@@ -63,8 +81,8 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
       fullName: 'Partikulat Sangat Halus (Asap & Jelaga)',
       value: airQuality.pm25,
       unit: 'µg/m³',
-      status: 'Tidak Sehat',
-      statusColor: 'text-rose-500',
+      status: 'Data model',
+      statusColor: 'text-slate-500',
       standard: 'Baku Mutu: 15 µg/m³ (WHO)',
       desc: 'Dihasilkan dari pembakaran sampah plastik & semak belukar. Menembus saluran pernapasan terdalam.',
     },
@@ -73,8 +91,8 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
       fullName: 'Partikulat Kasar (Debu Jalanan & Abu)',
       value: airQuality.pm10,
       unit: 'µg/m³',
-      status: 'Sedang',
-      statusColor: 'text-amber-500',
+      status: 'Data model',
+      statusColor: 'text-slate-500',
       standard: 'Baku Mutu: 45 µg/m³',
       desc: 'Debu terbawa angin kencang dan abu sisa kebakaran lahan.',
     },
@@ -83,8 +101,8 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
       fullName: 'Karbon Monoksida',
       value: airQuality.co,
       unit: 'mg/m³',
-      status: 'Baik',
-      statusColor: 'text-emerald-500',
+      status: 'Data model',
+      statusColor: 'text-slate-500',
       standard: 'Baku Mutu: 10 mg/m³',
       desc: 'Gas tanpa warna dan bau akibat pembakaran tidak sempurna.',
     },
@@ -93,8 +111,8 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
       fullName: 'Nitrogen Dioksida',
       value: airQuality.no2,
       unit: 'µg/m³',
-      status: 'Baik',
-      statusColor: 'text-emerald-500',
+      status: 'Data model',
+      statusColor: 'text-slate-500',
       standard: 'Baku Mutu: 50 µg/m³',
       desc: 'Berasal dari pembakaran suhu tinggi dan emisi kendaraan transportasi.',
     },
@@ -103,8 +121,8 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
       fullName: 'Ozon Permukaan',
       value: airQuality.o3,
       unit: 'µg/m³',
-      status: 'Sedang',
-      statusColor: 'text-amber-500',
+      status: 'Data model',
+      statusColor: 'text-slate-500',
       standard: 'Baku Mutu: 100 µg/m³',
       desc: 'Terbentuk saat polutan bereaksi dengan sinar matahari terik Kutai Timur.',
     },
@@ -179,7 +197,7 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
               </span>
               <div>
                 <span className="text-xl font-black block text-slate-900 dark:text-white">{t.airUnhealthy}</span>
-                <span className="text-xs font-bold text-rose-600 dark:text-rose-400">Indeks yang ditampilkan adalah US AQI dari model atmosfer</span>
+                <span className="text-xs font-bold text-rose-600 dark:text-rose-400">US AQI perkiraan dari model atmosfer; bukan ISPU resmi</span>
               </div>
             </div>
 
@@ -206,7 +224,7 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
           </div>
 
           <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 text-xs leading-relaxed text-slate-700 dark:text-slate-200 font-medium">
-            <strong className="text-slate-900 dark:text-white">Sumber:</strong> {dataSource}. <strong className="text-slate-900 dark:text-white">Parameter Dominan:</strong> {airQuality.dominantPollutant}. Partikel asap hasil karhutla dan pembakaran sampah rumah tangga mendominasi langit Kutai Timur saat ini.
+            <strong className="text-slate-900 dark:text-white">Sumber:</strong> {dataSource}. <strong className="text-slate-900 dark:text-white">Parameter Dominan:</strong> {airQuality.dominantPollutant}. Nilai ini merupakan estimasi model untuk koordinat terpilih dan bukan pembacaan sensor lokal.
           </div>
         </div>
 
@@ -232,8 +250,8 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
                   <Thermometer className="w-3.5 h-3.5 text-amber-500" />
                   Suhu Permukaan
                 </span>
-                <span className="text-xl font-black mt-1 block">33.4°C</span>
-                <span className="text-[10px] opacity-60">Terik Siang Hari</span>
+                <span className="text-xl font-black mt-1 block">{weather ? `${weather.temperature.toFixed(1)}°C` : "Memuat…"}</span>
+                <span className="text-[10px] opacity-60">Suhu udara model</span>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700">
@@ -241,8 +259,8 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
                   <Droplets className="w-3.5 h-3.5 text-cyan-500" />
                   Kelembapan Relatif
                 </span>
-                <span className="text-xl font-black mt-1 block">56%</span>
-                <span className="text-[10px] opacity-60">Gambut Mudah Terbakar</span>
+                <span className="text-xl font-black mt-1 block">{weather ? `${Math.round(weather.humidity)}%` : "Memuat…"}</span>
+                <span className="text-[10px] opacity-60">Kelembapan relatif</span>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700">
@@ -250,8 +268,8 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
                   <Wind className="w-3.5 h-3.5 text-indigo-500" />
                   Kecepatan Angin
                 </span>
-                <span className="text-xl font-black mt-1 block">15 km/jam</span>
-                <span className="text-[10px] opacity-60">Mendorong Asap ke Barat</span>
+                <span className="text-xl font-black mt-1 block">{weather ? `${weather.windSpeed.toFixed(1)} km/jam` : "Memuat…"}</span>
+                <span className="text-[10px] opacity-60">Kecepatan angin 10 m</span>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700">
@@ -259,14 +277,14 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
                   <Activity className="w-3.5 h-3.5 text-emerald-500" />
                   Arah Hembusan
                 </span>
-                <span className="text-xl font-black mt-1 block">Tenggara (SE)</span>
-                <span className="text-[10px] opacity-60">Dari Pesisir Selat Makassar</span>
+                <span className="text-xl font-black mt-1 block">{weather ? `${weather.windDirection}° (${windDirectionLabel(weather.windDirection)})` : "Memuat…"}</span>
+                <span className="text-[10px] opacity-60">Arah angin dari utara searah jarum jam</span>
               </div>
             </div>
           </div>
 
-          <div className="mt-4 p-3 rounded-xl bg-amber-500/10 text-amber-900 dark:text-amber-200 text-xs leading-relaxed border border-amber-500/20">
-            <strong>Kondisi Kritis:</strong> Angin tenggara berkecepatan 15 km/jam membawa asap pembakaran dari Bengalon menuju Sangatta Utara. Jangan menambah asap dengan membakar sampah!
+          <div className="mt-4 p-3 rounded-xl bg-slate-500/10 text-slate-700 dark:text-slate-200 text-xs leading-relaxed border border-slate-500/20">
+            <strong>Dinamika atmosfer:</strong> {weather ? `Tutupan awan ${Math.round(weather.cloudCover)}%, curah hujan saat ini ${weather.precipitation.toFixed(1)} mm, tekanan permukaan laut ${Math.round(weather.pressure)} hPa.` : "Data cuaca sedang dimuat."} Angin dapat memengaruhi arah penyebaran asap, tetapi data ini tidak mengonfirmasi sumber atau jalur asap tertentu. {weather ? `Pembaruan cuaca: ${weather.lastUpdated}.` : ""}
           </div>
         </div>
       </div>
