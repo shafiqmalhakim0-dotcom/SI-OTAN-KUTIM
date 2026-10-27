@@ -24,7 +24,7 @@ import {
 import { Header } from './components/Header';
 import { AirQualityBanner } from './components/AirQualityBanner';
 import { InteractiveMap } from './components/InteractiveMap';
-import { AirQualityPanel } from './components/AirQualityPanel';
+import { AirQualityPanel, WeatherSummary } from './components/AirQualityPanel';
 import { TpsDirectory } from './components/TpsDirectory';
 import { CitizenReportsFeed } from './components/CitizenReportsFeed';
 import { KarhutlaEducationHub } from './components/KarhutlaEducationHub';
@@ -96,7 +96,8 @@ export default function App() {
   // Live air quality follows the visitor's location when permission is granted.
   const [airQuality, setAirQuality] = useState(CURRENT_AIR_QUALITY);
   const [airLocationLabel, setAirLocationLabel] = useState('Sangatta (lokasi default)');
-  const [airDataSource, setAirDataSource] = useState('Data contoh lokal');
+  const [airDataSource, setAirDataSource] = useState('Memuat data model Open-Meteo');
+  const [weather, setWeather] = useState<WeatherSummary | null>(null);
   useEffect(() => {
     let active = true;
     let refreshTimer: ReturnType<typeof setInterval> | undefined;
@@ -145,11 +146,45 @@ export default function App() {
       }
     };
 
+    const loadWeather = async () => {
+      try {
+        const params = new URLSearchParams({
+          latitude: String(currentCoords.latitude),
+          longitude: String(currentCoords.longitude),
+          current: 'temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,cloud_cover,precipitation,pressure_msl',
+          timezone: 'Asia/Makassar',
+        });
+        const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`, { cache: 'no-store' });
+        if (!response.ok) throw new Error('Layanan cuaca tidak tersedia');
+        const payload = await response.json();
+        const current = payload.current;
+        if (!current || !Number.isFinite(current.temperature_2m)) throw new Error('Data cuaca tidak tersedia');
+        if (active) {
+          setWeather({
+            temperature: Number(current.temperature_2m),
+            humidity: Number(current.relative_humidity_2m ?? 0),
+            windSpeed: Number(current.wind_speed_10m ?? 0),
+            windDirection: Number(current.wind_direction_10m ?? 0),
+            cloudCover: Number(current.cloud_cover ?? 0),
+            precipitation: Number(current.precipitation ?? 0),
+            pressure: Number(current.pressure_msl ?? 0),
+            lastUpdated: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Makassar' }) + ' WITA',
+          });
+        }
+      } catch {
+        // Keep the last successful weather reading; the panel shows a loading state if none exists.
+      }
+    };
+
     const start = (latitude: number, longitude: number, label: string) => {
       currentCoords = { latitude, longitude };
       if (active) setAirLocationLabel(label);
       void loadAirQuality();
-      refreshTimer = setInterval(() => void loadAirQuality(), 15 * 60 * 1000);
+      void loadWeather();
+      refreshTimer = setInterval(() => {
+        void loadAirQuality();
+        void loadWeather();
+      }, 15 * 60 * 1000);
     };
 
     if ('geolocation' in navigator) {
@@ -275,8 +310,11 @@ export default function App() {
 
         {activeTab === 'air' && (
           <AirQualityPanel
-            airQuality={CURRENT_AIR_QUALITY}
+            airQuality={airQuality}
+            weather={weather}
             settings={settings}
+            locationLabel={airLocationLabel}
+            dataSource={airDataSource}
           />
         )}
 
