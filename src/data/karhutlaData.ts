@@ -3,7 +3,7 @@
  * 
  * Meliputi:
  * 1. Konfigurasi Pemutar Video HTML5 (edukasi-karhutla-compressed.mp4 & Google Drive Full HD)
- * 2. Profil & Ulasan Resmi Kepala BPBD Kabupaten Kutai Timur (Dr. Hj. Sulastin, S.Sos., S.H., M.Kes., M.M., M.A.P., S.Sos., S.H., M.Kes., M.M., M.A.P.)
+ * 2. Profil & Ulasan Resmi Kepala BPBD Kabupaten Kutai Timur (Dr. Hj. Sulastin, S.Sos., S.H., M.Kes., M.M., M.A.P.)
  * 3. Bahaya Paparan Asap PM2.5 & Kerusakan Ekosistem Gambut Lokal
  * 4. Panduan Pencegahan Dini & Standar Masker N95/KN95
  * 5. Mini-Game Kuis Cepat Tanggap Karhutla
