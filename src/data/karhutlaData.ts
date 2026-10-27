@@ -50,7 +50,7 @@ export const KARHUTLA_VIDEO_CONFIG: KarhutlaVideoConfig = {
 };
 
 export const BPBD_LEADER_PROFILE: BpbdLeaderProfile = {
-  name: 'Dr. Hj. Sulastin, S.Sos., S.H., M.Kes., M.M., M.A.P., S.Sos., S.H., M.Kes., M.M., M.A.P.',
+  name: 'Dr. Hj. Sulastin, S.Sos., S.H., M.Kes., M.M., M.A.P.',
   title: 'Kepala Pelaksana Badan Penanggulangan Bencana Daerah',
   agency: 'BPBD Kabupaten Kutai Timur',
   location: 'Kawasan Pusat Perkantoran Bukit Pelangi, Sangatta Utara',
