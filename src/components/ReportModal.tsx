@@ -11,8 +11,6 @@ import {
   UploadCloud,
   Navigation,
   FileText,
-  User,
-  Phone,
   Sparkles,
   FileCheck2,
 } from 'lucide-react';
@@ -46,9 +44,6 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   const [lng, setLng] = useState<number>(117.5451);
   const [isDetectingGps, setIsDetectingGps] = useState(false);
   const [gpsCaptured, setGpsCaptured] = useState(false);
-  const [reporterName, setReporterName] = useState('');
-  const [reporterRole, setReporterRole] = useState('Warga Setempat');
-  const [contactNumber, setContactNumber] = useState('');
   const [notes, setNotes] = useState('');
   const [urgency, setUrgency] = useState<'high' | 'medium' | 'low'>('high');
   const [previewImage, setPreviewImage] = useState<string>(
@@ -122,8 +117,8 @@ export const ReportModal: React.FC<ReportModalProps> = ({
       lng,
       svgX: foundDistrict.svgX + (Math.random() * 20 - 10),
       svgY: foundDistrict.svgY + (Math.random() * 20 - 10),
-      reporterName: reporterName || 'Warga Peduli Langit Biru',
-      reporterRole,
+      reporterName: 'Warga setempat',
+      reporterRole: 'Warga setempat',
       reportedAt: 'Baru saja (Verifikasi Otomatis)',
       status: 'verified',
       urgency,
@@ -306,32 +301,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               </div>
             </div>
 
-            {/* Reporter details */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold mb-1">{t.reporterName}</label>
-                <input
-                  type="text"
-                  value={reporterName}
-                  onChange={(e) => setReporterName(e.target.value)}
-                  placeholder="Misal: Andi / Warga RT 02"
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold mb-1">Peran Pelapor</label>
-                <select
-                  value={reporterRole}
-                  onChange={(e) => setReporterRole(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium"
-                >
-                  <option value="Warga Setempat">Warga Setempat</option>
-                  <option value="Pelajar / Pramuka">Pelajar / Pramuka Peduli Lingkungan</option>
-                  <option value="Relawan MPA">Relawan MPA (Masyarakat Peduli Api)</option>
-                  <option value="Aparat Desa / RT">Aparat Desa / RT</option>
-                </select>
-              </div>
+            {/* Identitas pelapor tidak diminta demi menjaga privasi warga */}
+            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-200">
+              <strong>Privasi warga dijaga.</strong> Nama dan nomor kontak tidak perlu dicantumkan. Laporan publik ditampilkan sebagai “Warga setempat”.
             </div>
 
             {/* Notes / Narrative */}
