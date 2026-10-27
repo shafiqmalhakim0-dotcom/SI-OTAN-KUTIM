@@ -57,13 +57,24 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const t = translations[settings.language] || translations.id;
   const isHighContrast = settings.contrastMode === 'high-contrast';
+  // Kategori dan warna mengikuti skala US AQI yang dikirim Open-Meteo.
+  // Ini estimasi US AQI, bukan ISPU resmi Indonesia.
+  const aqi = Math.max(0, Number(airQuality.overallIspu) || 0);
+  const aqiCategory =
+    aqi <= 50 ? { label: 'Baik', color: 'text-emerald-600', badge: 'bg-emerald-500/10 border-emerald-500/30', hex: '#10b981' } :
+    aqi <= 100 ? { label: 'Sedang', color: 'text-amber-500', badge: 'bg-amber-500/10 border-amber-500/30', hex: '#f59e0b' } :
+    aqi <= 150 ? { label: 'Tidak sehat bagi kelompok sensitif', color: 'text-orange-500', badge: 'bg-orange-500/10 border-orange-500/30', hex: '#f97316' } :
+    aqi <= 200 ? { label: 'Tidak sehat', color: 'text-red-600', badge: 'bg-red-500/10 border-red-500/30', hex: '#ef4444' } :
+    aqi <= 300 ? { label: 'Sangat tidak sehat', color: 'text-purple-600', badge: 'bg-purple-500/10 border-purple-500/30', hex: '#9333ea' } :
+    { label: 'Berbahaya', color: 'text-red-900', badge: 'bg-red-900/10 border-red-900/30', hex: '#7f1d1d' };
+  const gaugePosition = Math.min(100, (aqi / 500) * 100);
 
   const handleAudioPlayback = () => {
     if (isPlaying) {
       stopSpeech();
       setIsPlaying(false);
     } else {
-      const summaryText = `${t.airQualityTitle}. Nilai US AQI perkiraan saat ini adalah ${airQuality.overallIspu}, berstatus ${t.airUnhealthy}. Parameter dominan adalah ${airQuality.dominantPollutant}. PM2.5 tercatat ${airQuality.pm25} mikrogram per meter kubik, dan PM10 sebesar ${airQuality.pm10}. Disarankan memakai masker jika keluar rumah dan jangan membakar sampah!`;
+      const summaryText = `${t.airQualityTitle}. Nilai US AQI perkiraan saat ini adalah ${airQuality.overallIspu}, berstatus ${aqiCategory.label}. Parameter dominan adalah ${airQuality.dominantPollutant}. PM2.5 tercatat ${airQuality.pm25} mikrogram per meter kubik, dan PM10 sebesar ${airQuality.pm10}. Disarankan memakai masker jika keluar rumah dan jangan membakar sampah!`;
 
       playSpeech(
         summaryText,
@@ -192,33 +203,35 @@ export const AirQualityPanel: React.FC<AirQualityPanelProps> = ({
             </div>
 
             <div className="mt-4 flex items-baseline gap-4">
-              <span className="text-6xl font-black tracking-tighter text-rose-600 dark:text-rose-500">
+              <span className={`text-6xl font-black tracking-tighter ${aqiCategory.color}`}>
                 {airQuality.overallIspu}
               </span>
               <div>
-                <span className="text-xl font-black block text-slate-900 dark:text-white">{t.airUnhealthy}</span>
-                <span className="text-xs font-bold text-rose-600 dark:text-rose-400">US AQI perkiraan dari model atmosfer; bukan ISPU resmi</span>
+                <span className={`text-xl font-black block ${aqiCategory.color}`}>{aqiCategory.label}</span>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">US AQI perkiraan dari model atmosfer; bukan ISPU resmi</span>
               </div>
             </div>
 
-            {/* Scale Bar */}
+            {/* Skala warna dan penanda mengikuti nilai AQI aktual */}
             <div className="mt-6 space-y-2">
-              <div className="flex justify-between text-[11px] font-black text-slate-700 dark:text-slate-300">
-                <span className="text-emerald-500">0 Baik</span>
-                <span className="text-amber-500">50 Sedang</span>
-                <span className="text-rose-500">100 Tdk Sehat</span>
-                <span className="text-purple-500">200 Sgt Tdk Sehat</span>
-                <span className="text-red-700">300+ Bahaya</span>
+              <div className="flex flex-wrap justify-between gap-1 text-[10px] sm:text-[11px] font-black">
+                <span className="text-emerald-500">0–50 Baik</span>
+                <span className="text-amber-500">51–100 Sedang</span>
+                <span className="text-orange-500">101–150 Sensitif</span>
+                <span className="text-red-500">151–200 Tidak sehat</span>
+                <span className="text-purple-500">201–300 Sangat tidak sehat</span>
+                <span className="text-red-900">301+ Bahaya</span>
               </div>
-              <div className="w-full h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex ring-1 ring-slate-300 dark:ring-slate-600">
-                <div style={{ width: '16.6%' }} className="bg-emerald-500 h-full" />
-                <div style={{ width: '16.6%' }} className="bg-amber-400 h-full" />
-                <div style={{ width: '33.3%' }} className="bg-rose-500 h-full relative">
-                  {/* Current marker */}
-                  <div className="w-2.5 h-full bg-white ring-2 ring-black mx-auto shadow-md" />
+              <div className="relative w-full h-3.5 rounded-full overflow-hidden ring-1 ring-slate-300 dark:ring-slate-600">
+                <div className="absolute inset-0 flex">
+                  <div style={{ width: '10.1%' }} className="bg-emerald-500 h-full" />
+                  <div style={{ width: '10%' }} className="bg-amber-400 h-full" />
+                  <div style={{ width: '10%' }} className="bg-orange-500 h-full" />
+                  <div style={{ width: '10%' }} className="bg-red-500 h-full" />
+                  <div style={{ width: '20%' }} className="bg-purple-600 h-full" />
+                  <div style={{ width: '39.9%' }} className="bg-red-900 h-full" />
                 </div>
-                <div style={{ width: '16.6%' }} className="bg-purple-600 h-full" />
-                <div style={{ width: '16.9%' }} className="bg-red-900 h-full" />
+                <div title={`AQI ${aqi}: ${aqiCategory.label}`} style={{ left: `${gaugePosition}%` }} className="absolute top-0 h-full w-1.5 bg-white border-x border-black shadow-md -translate-x-1/2" />
               </div>
             </div>
           </div>
