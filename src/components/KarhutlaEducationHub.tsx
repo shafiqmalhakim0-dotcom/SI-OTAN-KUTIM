@@ -392,7 +392,6 @@ export const KarhutlaEducationHub: React.FC<KarhutlaEducationHubProps> = ({
                 "{BPBD_LEADER_PROFILE.officialStatement}"
               </p>
               <div className="pt-2 border-t border-rose-500/20 flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold text-rose-700 dark:text-rose-300">
-                <span>Semboyan: "{BPBD_LEADER_PROFILE.callout}"</span>
                 <span>Hotline Siaga: (0549) 21113</span>
               </div>
             </div>
