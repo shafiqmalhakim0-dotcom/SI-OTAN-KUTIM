@@ -128,13 +128,15 @@ export function parseFirmsCsv(csvText: string): HotspotPin[] {
 
     const nearestDistrict = findNearestDistrict(lat, lng);
     const confidenceInfo = parseConfidence(confIndex !== -1 ? row[confIndex] : undefined);
-    const rawBrightness = brightIndex !== -1 ? Number(row[brightIndex]) : Number.NaN;
+    const brightnessText = brightIndex !== -1 ? (row[brightIndex] || '').trim() : '';
+    const rawBrightness = brightnessText ? Number(brightnessText) : Number.NaN;
     const brightness = Number.isFinite(rawBrightness) ? Math.round(rawBrightness) : 0;
     const satelliteCode = satIndex !== -1 ? row[satIndex] : '';
     const instrument = instIndex !== -1 && row[instIndex] ? row[instIndex] : 'VIIRS';
     const acqTime = timeIndex !== -1 && row[timeIndex] ? row[timeIndex].padStart(4, '0') : '';
     const acqDate = dateIndex !== -1 && row[dateIndex] ? row[dateIndex] : '';
-    const rawFrp = frpIndex !== -1 ? Number(row[frpIndex]) : Number.NaN;
+    const frpText = frpIndex !== -1 ? (row[frpIndex] || '').trim() : '';
+    const rawFrp = frpText ? Number(frpText) : Number.NaN;
     const frpMW = Number.isFinite(rawFrp) ? rawFrp : undefined;
 
     // NASA FIRMS acquisition time is UTC. Convert it to local WITA for display.
