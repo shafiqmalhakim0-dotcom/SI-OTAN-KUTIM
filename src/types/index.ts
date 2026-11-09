@@ -75,11 +75,18 @@ export interface HotspotPin {
   lng: number;
   svgX: number;
   svgY: number;
+  /** Legacy numeric field retained for compatibility; do not present categorical VIIRS values as percentages. */
   confidence: number;
+  /** Original NASA FIRMS confidence field, e.g. low/nominal/high or a numeric MODIS value. */
+  confidenceRaw?: string;
+  confidenceCategory?: 'low' | 'nominal' | 'high' | 'numeric' | 'unknown';
   satellite: 'VIIRS' | 'MODIS' | 'SNPP' | 'Laporan Warga' | string;
   detectedAt: string;
   brightnessKelvin: number;
-  type: 'karhutla' | 'pembakaran_sampah';
+  frpMW?: number;
+  acquisitionDate?: string;
+  acquisitionTimeUtc?: string;
+  type: 'karhutla' | 'pembakaran_sampah' | 'belum_diketahui';
 }
 
 export interface WasteDepot {
