@@ -1196,7 +1196,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
               : 'bg-white text-slate-900 border-slate-200 shadow-sm'
           }`}
         >
-          {selectedDistrict ? (
+          {selectedDistrict && !selectedHotspot ? (
             <div className="space-y-4">
               {/* Header with dialect & badge */}
               <div>
@@ -1498,28 +1498,85 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             </div>
           ) : selectedHotspot ? (
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full text-xs font-black bg-rose-600 text-white flex items-center gap-1">
-                  <Flame className="w-3.5 h-3.5" />
-                  <span>TITIK PANAS (HOTSPOT AKTIF)</span>
-                </span>
-                <span className="text-xs font-bold opacity-80">{selectedHotspot.satellite}</span>
-              </div>
-              <h3 className="text-xl font-black">{selectedHotspot.locationName}</h3>
-              <p className="text-xs font-medium text-slate-600 dark:text-slate-300">
-                Terdeteksi: {selectedHotspot.detectedAt} · Keyakinan Satelit: {selectedHotspot.confidence}% · Suhu Termal: {selectedHotspot.brightnessKelvin} Kelvin
-              </p>
-              <div className="p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-xs space-y-1">
-                <span className="font-bold text-rose-800 dark:text-rose-300 block">
-                  Kategori: {selectedHotspot.type === 'karhutla' ? 'Kebakaran Hutan & Lahan' : 'Pembakaran Sampah Liar'}
-                </span>
-                <p className="opacity-80">
-                  Koordinat: {selectedHotspot.lat.toFixed(4)}, {selectedHotspot.lng.toFixed(4)}
-                </p>
-                <div className="mt-2 text-[10px] text-slate-600 dark:text-slate-400">
-                  Sumber: SIPONGI Kementerian LHK & NASA FIRMS Resource Management System
-                </div>
-              </div>
+              {(() => {
+                const hotspotDistrict = districts.find((d) => d.id === selectedHotspot.districtId);
+                const category = selectedHotspot.confidenceCategory || 'unknown';
+                const confidenceCopy = category === 'high'
+                  ? { title: 'Tinggi', detail: 'Sinyal deteksi satelit tergolong tinggi menurut kategori sumber data.' }
+                  : category === 'nominal'
+                  ? { title: 'Normal', detail: 'Sinyal deteksi berada pada kategori nominal menurut sumber data.' }
+                  : category === 'low'
+                  ? { title: 'Rendah', detail: 'Sinyal deteksi berada pada kategori rendah. Perlu kehati-hatian dan pemeriksaan tambahan.' }
+                  : category === 'numeric'
+                  ? { title: 'Nilai numerik', detail: 'Sumber memberikan nilai numerik. Maknanya mengikuti skema sensor; angka ini bukan persentase kemungkinan terjadi kebakaran.' }
+                  : { title: 'Tidak tersedia', detail: 'Sumber tidak menyediakan informasi confidence yang dapat dibaca.' };
+                return (
+                  <>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="px-3 py-1 rounded-full text-xs font-black bg-rose-600 text-white flex items-center gap-1">
+                        <Flame className="w-3.5 h-3.5" />
+                        <span>DETEKSI TITIK PANAS</span>
+                      </span>
+                      <span className="text-xs font-bold opacity-80">{selectedHotspot.satellite}</span>
+                    </div>
+                    <h3 className="text-xl font-black">{selectedHotspot.locationName}</h3>
+                    <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-black uppercase tracking-wide">Tingkat confidence satelit</span>
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-black ${category === 'high' ? 'bg-emerald-600 text-white' : category === 'nominal' ? 'bg-amber-500 text-slate-950' : category === 'low' ? 'bg-rose-600 text-white' : 'bg-slate-600 text-white'}`}>
+                          {confidenceCopy.title}
+                        </span>
+                      </div>
+                      <p className="text-xs leading-relaxed">{confidenceCopy.detail}</p>
+                      {selectedHotspot.confidenceRaw && (
+                        <p className="text-[11px] font-semibold">Nilai asli dari sumber: {selectedHotspot.confidenceRaw}</p>
+                      )}
+                      <p className="text-[10px] leading-relaxed text-slate-600 dark:text-slate-300">
+                        Confidence menjelaskan tingkat keyakinan algoritma satelit terhadap deteksi anomali panas, bukan kepastian bahwa lokasi sedang terbakar dan bukan persentase risiko kebakaran. Titik panas tetap perlu diverifikasi.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800">
+                        <span className="block text-[10px] opacity-70">Wilayah administratif perkiraan</span>
+                        <strong>{hotspotDistrict?.name || selectedHotspot.districtName}</strong>
+                        <span className="block text-[10px] opacity-60">Penetapan saat ini berdasarkan kecamatan terdekat, bukan uji batas poligon.</span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800">
+                        <span className="block text-[10px] opacity-70">Waktu deteksi</span>
+                        <strong>{selectedHotspot.detectedAt || 'Tidak tersedia'}</strong>
+                        <span className="block text-[10px] opacity-60">Jam lokal ditampilkan dalam WITA jika tersedia.</span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800">
+                        <span className="block text-[10px] opacity-70">Koordinat titik</span>
+                        <strong>{selectedHotspot.lat.toFixed(5)}, {selectedHotspot.lng.toFixed(5)}</strong>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800">
+                        <span className="block text-[10px] opacity-70">Energi radiasi kebakaran (FRP)</span>
+                        <strong>{typeof selectedHotspot.frpMW === 'number' ? `${selectedHotspot.frpMW.toFixed(2)} MW` : 'Tidak tersedia'}</strong>
+                      </div>
+                    </div>
+                    {hotspotDistrict && (
+                      <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/25 space-y-2">
+                        <h4 className="text-xs font-black text-blue-800 dark:text-blue-300">Konteks wilayah · Kecamatan {hotspotDistrict.name}</h4>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div><span className="block text-[10px] opacity-65">Jumlah penduduk</span><strong>{hotspotDistrict.population.toLocaleString('id-ID')} jiwa</strong></div>
+                          <div><span className="block text-[10px] opacity-65">Kepadatan penduduk</span><strong>{hotspotDistrict.populationDensity} jiwa/km²</strong></div>
+                          <div><span className="block text-[10px] opacity-65">Hotspot pada data wilayah</span><strong>{hotspotDistrict.hotspotCount} titik</strong></div>
+                          <div><span className="block text-[10px] opacity-65">Kualitas udara (ISPU)</span><strong>{hotspotDistrict.ispu}</strong></div>
+                          <div><span className="block text-[10px] opacity-65">Suhu / kelembapan</span><strong>{hotspotDistrict.temperature}°C / {hotspotDistrict.humidity}%</strong></div>
+                          <div><span className="block text-[10px] opacity-65">Angin</span><strong>{hotspotDistrict.windSpeed} km/jam · {hotspotDistrict.windDirection}</strong></div>
+                        </div>
+                        <p className="text-[10px] leading-relaxed opacity-75">Data ini merupakan ringkasan tingkat kecamatan, bukan pengukuran tepat pada koordinat hotspot.</p>
+                      </div>
+                    )}
+                    <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-[10px] space-y-1">
+                      <strong>Sumber dan batasan data</strong>
+                      <p>NASA FIRMS · {selectedHotspot.satellite}. Koordinat menunjukkan pusat piksel deteksi satelit, bukan batas pasti area api.</p>
+                      <p>Jenis kejadian belum dapat dipastikan hanya dari deteksi satelit. Pemeriksaan lapangan diperlukan untuk memastikan apakah terdapat kebakaran dan apa penyebabnya.</p>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           ) : selectedTps ? (
             <div className="space-y-4">
