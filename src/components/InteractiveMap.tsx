@@ -1500,8 +1500,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             <div className="space-y-4">
               {(() => {
                 const hotspotDistrict = districts.find((d) => d.id === selectedHotspot.districtId);
-                const category = selectedHotspot.confidenceCategory || 'unknown';
-                const confidenceCopy = category === 'high'
+                const isCitizenReport = selectedHotspot.satellite === 'Laporan Warga';
+                const category = isCitizenReport
+                  ? 'unknown'
+                  : selectedHotspot.confidenceCategory || 'unknown';
+                const confidenceCopy = isCitizenReport
+                  ? { title: 'Tidak berlaku', detail: 'Ini merupakan laporan warga, bukan deteksi satelit. Confidence satelit tidak diterapkan pada laporan ini.' }
+                  : category === 'high'
                   ? { title: 'Tinggi', detail: 'Sinyal deteksi satelit tergolong tinggi menurut kategori sumber data.' }
                   : category === 'nominal'
                   ? { title: 'Normal', detail: 'Sinyal deteksi berada pada kategori nominal menurut sumber data.' }
@@ -1528,7 +1533,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                         </span>
                       </div>
                       <p className="text-xs leading-relaxed">{confidenceCopy.detail}</p>
-                      {selectedHotspot.confidenceRaw && (
+                      {!isCitizenReport && selectedHotspot.confidenceRaw && (
                         <p className="text-[11px] font-semibold">Nilai asli dari sumber: {selectedHotspot.confidenceRaw}</p>
                       )}
                       <p className="text-[10px] leading-relaxed text-slate-600 dark:text-slate-300">
