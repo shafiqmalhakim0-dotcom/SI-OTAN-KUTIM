@@ -64,16 +64,34 @@ function findNearestDistrict(lat: number, lng: number): DistrictData {
 }
 
 /**
- * Mengonversi nilai confidence dari NASA FIRMS (berupa string 'nominal', 'high', 'low' atau angka 0-100)
+ * Preserve the confidence value exactly as supplied by NASA FIRMS.
+ * VIIRS commonly uses low/nominal/high categories; MODIS may use 0-100.
+ * These formats are not interchangeable and neither is a probability that a fire exists.
  */
-function normalizeConfidence(raw: string | undefined): number {
-  if (!raw) return 80;
-  const cleaned = raw.trim().toLowerCase();
-  if (cleaned === 'h' || cleaned === 'high') return 95;
-  if (cleaned === 'n' || cleaned === 'nominal') return 85;
-  if (cleaned === 'l' || cleaned === 'low') return 60;
-  const num = parseInt(cleaned, 10);
-  return isNaN(num) ? 80 : Math.min(100, Math.max(0, num));
+function parseConfidence(raw: string | undefined): {
+  raw: string;
+  category: 'low' | 'nominal' | 'high' | 'numeric' | 'unknown';
+  legacyValue: number;
+} {
+  const value = (raw || '').trim();
+  const normalized = value.toLowerCase();
+  if (normalized === 'l' || normalized === 'low') {
+    return { raw: value, category: 'low', legacyValue: 0 };
+  }
+  if (normalized === 'n' || normalized === 'nominal') {
+    return { raw: value, category: 'nominal', legacyValue: 0 };
+  }
+  if (normalized === 'h' || normalized === 'high') {
+    return { raw: value, category: 'high', legacyValue: 0 };
+  }
+  if (value !== '' && Number.isFinite(Number(value))) {
+    return {
+      raw: value,
+      category: 'numeric',
+      legacyValue: Math.min(100, Math.max(0, Number(value))),
+    };
+  }
+  return { raw: value, category: 'unknown', legacyValue: 0 };
 }
 
 /**
@@ -109,27 +127,41 @@ export function parseFirmsCsv(csvText: string): HotspotPin[] {
     if (isNaN(lat) || isNaN(lng)) continue;
 
     const nearestDistrict = findNearestDistrict(lat, lng);
-    const confidence = confIndex !== -1 ? normalizeConfidence(row[confIndex]) : 85;
-    const brightness = brightIndex !== -1 ? Math.round(parseFloat(row[brightIndex]) || 340) : 340;
+    const confidenceInfo = parseConfidence(confIndex !== -1 ? row[confIndex] : undefined);
+    const brightnessText = brightIndex !== -1 ? (row[brightIndex] || '').trim() : '';
+    const rawBrightness = brightnessText ? Number(brightnessText) : Number.NaN;
+    const brightness = Number.isFinite(rawBrightness) ? Math.round(rawBrightness) : 0;
     const satelliteCode = satIndex !== -1 ? row[satIndex] : '';
-    const instrument = instIndex !== -1 ? row[instIndex] : 'VIIRS';
-    const acqTime = timeIndex !== -1 && row[timeIndex] ? row[timeIndex] : '0500';
+    const instrument = instIndex !== -1 && row[instIndex] ? row[instIndex] : 'VIIRS';
+    const acqTime = timeIndex !== -1 && row[timeIndex] ? row[timeIndex].padStart(4, '0') : '';
     const acqDate = dateIndex !== -1 && row[dateIndex] ? row[dateIndex] : '';
-    const frp = frpIndex !== -1 ? parseFloat(row[frpIndex]) || 12 : 12;
+    const frpText = frpIndex !== -1 ? (row[frpIndex] || '').trim() : '';
+    const rawFrp = frpText ? Number(frpText) : Number.NaN;
+    const frpMW = Number.isFinite(rawFrp) ? rawFrp : undefined;
 
-    // Format jam pengambilan satelit ke format WITA (UTC+8)
-    const formattedHour = acqTime.length >= 4 
-      ? `${acqTime.slice(0, 2)}:${acqTime.slice(2, 4)} WITA`
-      : '05:00 WITA';
+    // NASA FIRMS acquisition time is UTC. Convert it to local WITA for display.
+    let formattedHour = 'Waktu tidak tersedia';
+    if (/^\\d{4}$/.test(acqTime)) {
+      const hh = Number(acqTime.slice(0, 2));
+      const mm = Number(acqTime.slice(2, 4));
+      if (hh <= 23 && mm <= 59) {
+        const utcDate = acqDate
+          ? new Date(`${acqDate}T${acqTime.slice(0, 2)}:${acqTime.slice(2, 4)}:00Z`)
+          : new Date(Date.UTC(2020, 0, 1, hh, mm));
+        formattedHour = new Intl.DateTimeFormat('id-ID', {
+          timeZone: 'Asia/Makassar',
+          hour: '2-digit',
+          minute: '2-digit',
+          hourCycle: 'h23',
+        }).format(utcDate) + ' WITA';
+      }
+    }
 
     const satelliteLabel = instrument.toUpperCase().includes('MODIS')
       ? 'MODIS'
-      : satelliteCode.includes('N')
+      : satelliteCode.toUpperCase().includes('N')
       ? 'SNPP'
       : 'VIIRS';
-
-    // Perkiraan jenis titik api: jika dekat area pemukiman padat sangatta -> pembakaran sampah, jika di hutan/kebun -> karhutla
-    const isSettlement = nearestDistrict.id.includes('sangatta') && confidence < 90;
 
     results.push({
       id: `firms-live-${i}-${Date.now().toString().slice(-4)}`,
@@ -140,11 +172,17 @@ export function parseFirmsCsv(csvText: string): HotspotPin[] {
       lng,
       svgX: nearestDistrict.svgX,
       svgY: nearestDistrict.svgY,
-      confidence,
+      confidence: confidenceInfo.legacyValue,
+      confidenceRaw: confidenceInfo.raw,
+      confidenceCategory: confidenceInfo.category,
       satellite: `NASA FIRMS (${satelliteLabel})`,
       detectedAt: `${formattedHour}${acqDate ? ` • ${acqDate}` : ''}`,
+      acquisitionDate: acqDate || undefined,
+      acquisitionTimeUtc: acqTime || undefined,
       brightnessKelvin: brightness,
-      type: isSettlement ? 'pembakaran_sampah' : 'karhutla',
+      frpMW,
+      // Satellite detections do not identify whether the source is a forest fire or waste burning.
+      type: 'belum_diketahui',
     });
   }
 
